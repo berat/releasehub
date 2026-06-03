@@ -8,7 +8,7 @@ import { CopiedToast } from '@/components/ui/CopyCommand'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/releasehub">
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/waitlist" element={<WaitlistPage />} />
