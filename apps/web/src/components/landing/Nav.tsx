@@ -4,14 +4,13 @@ import { useNavScroll } from '@/hooks/useNavScroll'
 import { useGitHubStars } from '@/hooks/useGitHubStars'
 import { Logo } from '@/components/ui/Logo'
 
-// isRoute: true → <Link> kullan (React Router), false → <a> kullan (hash anchor)
 const NAV_LINKS = [
-  { href: '/#flow',      label: 'How it works',   isRoute: false },
-  { href: '/#understand',label: 'AI understanding',isRoute: false },
-  { href: '/#outputs',   label: 'Outputs',         isRoute: false },
-  { href: '/#vs',        label: 'vs GitHub',       isRoute: false },
-  { href: '/docs',       label: 'Docs',            isRoute: true  },
-  { href: '/changelog',  label: 'Changelog',       isRoute: true, highlight: true },
+  { to: '/#flow',       label: 'How it works'                    },
+  { to: '/#understand', label: 'AI understanding'                },
+  { to: '/#outputs',    label: 'Outputs'                         },
+  { to: '/#vs',         label: 'vs GitHub'                       },
+  { to: '/docs',        label: 'Docs'                            },
+  { to: '/changelog',   label: 'Changelog', highlight: true      },
 ]
 
 interface NavCta {
@@ -40,17 +39,6 @@ export function Nav() {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
-  const renderNavLink = (href: string, label: string, isRoute: boolean, highlight?: boolean, extraClass?: string, onClick?: () => void) => {
-    if (highlight) {
-      return isRoute
-        ? <Link key={href} to={href} className={`nav-changelog${extraClass ? ` ${extraClass}` : ''}`} onClick={onClick}><span className="nav-changelog-dot" />{label}</Link>
-        : <a key={href} href={href} className={`nav-changelog${extraClass ? ` ${extraClass}` : ''}`} onClick={onClick}><span className="nav-changelog-dot" />{label}</a>
-    }
-    return isRoute
-      ? <Link key={href} to={href} className={extraClass} onClick={onClick}>{label}</Link>
-      : <a key={href} href={href} className={extraClass} onClick={onClick}>{label}</a>
-  }
-
   return (
     <>
       <header className={`nav${scrolled ? ' scrolled' : ''}`} id="nav">
@@ -59,9 +47,18 @@ export function Nav() {
 
           {/* Desktop links */}
           <nav className="nav-links" aria-label="Primary">
-            {NAV_LINKS.map(({ href, label, isRoute, highlight }) =>
-              renderNavLink(href, label, isRoute, highlight)
-            )}
+            {NAV_LINKS.map(({ to, label, highlight }) => (
+              highlight
+                ? (
+                  <Link key={to} to={to} className="nav-changelog">
+                    <span className="nav-changelog-dot" />
+                    {label}
+                  </Link>
+                )
+                : (
+                  <Link key={to} to={to}>{label}</Link>
+                )
+            ))}
           </nav>
 
           <div className="nav-cta">
@@ -95,9 +92,20 @@ export function Nav() {
         <div className="mobile-menu" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div className="mobile-menu-inner">
             <nav className="mobile-menu-links">
-              {NAV_LINKS.map(({ href, label, isRoute, highlight }) =>
-                renderNavLink(href, label, isRoute, highlight, `mobile-menu-link${highlight ? ' mobile-menu-link--highlight' : ''}`, () => setMenuOpen(false))
-              )}
+              {NAV_LINKS.map(({ to, label, highlight }) => (
+                highlight
+                  ? (
+                    <Link key={to} to={to} className="mobile-menu-link mobile-menu-link--highlight" onClick={() => setMenuOpen(false)}>
+                      <span className="nav-changelog-dot" />
+                      {label}
+                    </Link>
+                  )
+                  : (
+                    <Link key={to} to={to} className="mobile-menu-link" onClick={() => setMenuOpen(false)}>
+                      {label}
+                    </Link>
+                  )
+              ))}
             </nav>
             <div className="mobile-menu-footer">
               <Link className="btn btn-acc" to={cta.to} style={{ width: '100%', justifyContent: 'center' }} onClick={() => setMenuOpen(false)}>

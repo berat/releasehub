@@ -5,13 +5,12 @@ import { CopyCommand } from '@/components/ui/CopyCommand'
 
 // Hash anchor'lar (#) ve external linkler <a> kalır, route linkleri <Link> olur
 function FooterLink({ href, label, external }: { href: string; label: string; external?: boolean }) {
-  if (external || href.startsWith('http') || href.startsWith('#') || href.startsWith('/#')) {
+  if (external || href.startsWith('http')) {
     return (
-      <a href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
-        {label}
-      </a>
+      <a href={href} target="_blank" rel="noopener noreferrer">{label}</a>
     )
   }
+  // Internal links (routes and hash anchors) — React Router adds basename
   return <Link to={href}>{label}</Link>
 }
 
