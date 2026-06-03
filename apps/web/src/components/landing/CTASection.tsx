@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Reveal } from '@/components/ui/Reveal'
 import { CopyCommand } from '@/components/ui/CopyCommand'
 
@@ -13,7 +14,7 @@ export function CTASection() {
               <CopyCommand />
             </div>
             <div className="cta-actions">
-              <a className="btn btn-acc" href="/docs">See the setup →</a>
+              <Link className="btn btn-acc" to="/docs">See the setup →</Link>
               <a className="btn btn-ghost" href="https://github.com/berat/releasehub" target="_blank" rel="noopener noreferrer">Star on GitHub ★</a>
             </div>
             <p className="cta-fine">Free &amp; open source · MIT licensed · no server, no lock-in</p>

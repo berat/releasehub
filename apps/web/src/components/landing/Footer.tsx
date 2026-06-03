@@ -1,6 +1,19 @@
+import { Link } from 'react-router-dom'
 import { Logo } from '@/components/ui/Logo'
 import { FOOTER_LINKS } from '@/data/landing'
 import { CopyCommand } from '@/components/ui/CopyCommand'
+
+// Hash anchor'lar (#) ve external linkler <a> kalır, route linkleri <Link> olur
+function FooterLink({ href, label, external }: { href: string; label: string; external?: boolean }) {
+  if (external || href.startsWith('http') || href.startsWith('#') || href.startsWith('/#')) {
+    return (
+      <a href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+        {label}
+      </a>
+    )
+  }
+  return <Link to={href}>{label}</Link>
+}
 
 export function Footer() {
   return (
@@ -15,25 +28,19 @@ export function Footer() {
             <div className="foot-col">
               <h5>Product</h5>
               {FOOTER_LINKS.product.map(({ href, label }) => (
-                <a key={href} href={href}>{label}</a>
+                <FooterLink key={label} href={href} label={label} />
               ))}
             </div>
             <div className="foot-col">
               <h5>Open source</h5>
               {FOOTER_LINKS.openSource.map(({ href, label, external }) => (
-                <a
-                  key={label}
-                  href={href}
-                  {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                >
-                  {label}
-                </a>
+                <FooterLink key={label} href={href} label={label} external={external} />
               ))}
             </div>
             <div className="foot-col">
               <h5>Built for</h5>
               {FOOTER_LINKS.builtFor.map(({ href, label }) => (
-                <a key={label} href={href}>{label}</a>
+                <FooterLink key={label} href={href} label={label} />
               ))}
             </div>
           </div>

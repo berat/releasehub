@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Reveal } from '@/components/ui/Reveal'
 import { HERO_COMMITS, HERO_OUTPUTS } from '@/data/landing'
 
@@ -17,7 +18,7 @@ export function Hero() {
             outputs GitHub release notes, a changelog, and a Slack message — ready to ship.
           </p>
           <div className="hero-actions">
-            <a className="btn btn-acc" href="/docs">Get started →</a>
+            <Link className="btn btn-acc" to="/docs">Get started →</Link>
             <a className="btn btn-ghost" href="https://github.com/berat/releasehub" target="_blank" rel="noopener noreferrer">Star on GitHub ★</a>
           </div>
           <div className="hero-meta">

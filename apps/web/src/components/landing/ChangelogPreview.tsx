@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Reveal } from '@/components/ui/Reveal'
 import { CHANGELOG } from '@/data/changelog'
 
@@ -49,12 +50,12 @@ export function ChangelogPreview() {
 
         <Reveal>
           <div className="cl-preview-footer">
-            <a className="cl-view-all" href="/changelog">
+            <Link className="cl-view-all" to="/changelog">
               View full changelog
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
-            </a>
+            </Link>
           </div>
         </Reveal>
       </div>

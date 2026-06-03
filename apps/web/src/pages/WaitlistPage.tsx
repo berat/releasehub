@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { Reveal } from '@/components/ui/Reveal'
@@ -45,7 +46,7 @@ export function WaitlistPage() {
 
             <p style={{ textAlign: 'center', color: 'var(--ink-3)', fontSize: 14, marginTop: 22 }}>
               Not ready to wait?{' '}
-              <a href="/docs" style={{ color: 'var(--acc)' }}>Install the CLI for free →</a>
+              <Link to="/docs" style={{ color: 'var(--acc)' }}>Install the CLI for free →</Link>
             </p>
           </div>
         </div>
