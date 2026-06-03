@@ -6,30 +6,37 @@ import { ConfigError } from './errors.js'
 const CONFIG_DIR = join(homedir(), '.releasehub')
 const CONFIG_PATH = join(CONFIG_DIR, 'config.json')
 
-export type AIProvider = 'anthropic' // | 'openai' | 'gemini' — coming soon
+export type AIProvider = 'anthropic' | 'openai'
+
+export const AI_PROVIDERS: AIProvider[] = ['anthropic', 'openai']
+
+export const AI_PROVIDER_LABELS: Record<AIProvider, string> = {
+  anthropic: 'Anthropic (Claude)',
+  openai: 'OpenAI (GPT-4o)',
+}
+
+export const AI_PROVIDER_KEY_URLS: Record<AIProvider, string> = {
+  anthropic: 'https://console.anthropic.com',
+  openai: 'https://platform.openai.com/api-keys',
+}
 
 export interface Config {
   github_token?: string
-  anthropic_key?: string
-  // Future providers:
-  // openai_key?: string
-  // gemini_key?: string
-  default_format?: 'github-release' | 'changelog' | 'slack'
   ai_provider?: AIProvider
+  anthropic_key?: string
+  openai_key?: string
+  default_format?: 'github-release' | 'changelog' | 'slack'
 }
 
 function ensureConfigDir(): void {
-  if (!existsSync(CONFIG_DIR)) {
-    mkdirSync(CONFIG_DIR, { recursive: true })
-  }
+  if (!existsSync(CONFIG_DIR)) mkdirSync(CONFIG_DIR, { recursive: true })
 }
 
 export function readConfig(): Config {
   ensureConfigDir()
   if (!existsSync(CONFIG_PATH)) return {}
   try {
-    const raw = readFileSync(CONFIG_PATH, 'utf-8')
-    return JSON.parse(raw) as Config
+    return JSON.parse(readFileSync(CONFIG_PATH, 'utf-8')) as Config
   } catch {
     throw new ConfigError(`Failed to read config at ${CONFIG_PATH}`)
   }
@@ -46,11 +53,9 @@ export function writeConfig(config: Config): void {
 }
 
 export function updateConfig(partial: Partial<Config>): void {
-  const current = readConfig()
-  writeConfig({ ...current, ...partial })
+  writeConfig({ ...readConfig(), ...partial })
 }
 
-// Env var takes precedence over config file
 export function getGitHubToken(): string | undefined {
   return process.env['RELEASEHUB_GITHUB_TOKEN'] ?? readConfig().github_token
 }
@@ -59,26 +64,25 @@ export function getAnthropicKey(): string | undefined {
   return process.env['RELEASEHUB_ANTHROPIC_KEY'] ?? readConfig().anthropic_key
 }
 
-// Future:
-// export function getOpenAIKey(): string | undefined {
-//   return process.env['RELEASEHUB_OPENAI_KEY'] ?? readConfig().openai_key
-// }
-// export function getGeminiKey(): string | undefined {
-//   return process.env['RELEASEHUB_GEMINI_KEY'] ?? readConfig().gemini_key
-// }
+export function getOpenAIKey(): string | undefined {
+  return process.env['RELEASEHUB_OPENAI_KEY'] ?? readConfig().openai_key
+}
 
-export function getAIKey(): string | undefined {
-  const config = readConfig()
-  const provider = config.ai_provider ?? 'anthropic'
+export function getActiveProvider(): AIProvider {
+  return readConfig().ai_provider ?? 'anthropic'
+}
 
+export function getActiveAIKey(): string | undefined {
+  const provider = getActiveProvider()
   switch (provider) {
-    case 'anthropic':
-      return getAnthropicKey()
-    // case 'openai':
-    //   return getOpenAIKey()
-    // case 'gemini':
-    //   return getGeminiKey()
-    default:
-      return getAnthropicKey()
+    case 'anthropic': return getAnthropicKey()
+    case 'openai':    return getOpenAIKey()
+  }
+}
+
+export function getKeyForProvider(provider: AIProvider): string | undefined {
+  switch (provider) {
+    case 'anthropic': return getAnthropicKey()
+    case 'openai':    return getOpenAIKey()
   }
 }
