@@ -100,7 +100,7 @@ export function DocsPage() {
             <ul>
               <li><strong>Node.js 18+</strong></li>
               <li><strong>A GitHub account</strong> with access to the repos you want to analyze</li>
-              <li><strong>An Anthropic API key</strong> — get one at <a className="ln" href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a></li>
+              <li><strong>An AI provider key</strong> — Anthropic or OpenAI (you choose during setup)</li>
             </ul>
 
             <h2 id="installation">Installation</h2>
@@ -122,10 +122,18 @@ export function DocsPage() {
             </Callout>
 
             <h2 id="ai-key">AI key</h2>
-            <p>Add your Anthropic API key. All AI calls go directly from your machine to Anthropic — costs appear on your Anthropic account, not ours.</p>
+            <p>ReleaseHub supports Anthropic (Claude) and OpenAI (GPT-4o). Run the command and select your provider interactively:</p>
             <CodeBlock>{'releasehub ai add-key'}</CodeBlock>
-            <p>The key is stored in <code className="inline">~/.releasehub/config.json</code> with <code className="inline">chmod 600</code> permissions. It is never sent to ReleaseHub servers.</p>
-            <p>Average cost: <strong>~$0.003 per analysis</strong> (20 PRs, claude-sonnet).</p>
+            <p>You'll be shown a numbered list — pick your provider, then paste your API key. It's validated immediately and saved to <code className="inline">~/.releasehub/config.json</code> with <code className="inline">chmod 600</code> permissions. It is never sent to ReleaseHub servers.</p>
+            <ul>
+              <li>Anthropic key: <a className="ln" href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a></li>
+              <li>OpenAI key: <a className="ln" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">platform.openai.com/api-keys</a></li>
+            </ul>
+            <p>To switch providers later:</p>
+            <CodeBlock>{'releasehub ai switch'}</CodeBlock>
+            <p>To check the status of all saved keys:</p>
+            <CodeBlock>{'releasehub ai status'}</CodeBlock>
+            <p>Average cost: <strong>~$0.003 per analysis</strong> (20 PRs). Costs go directly to your AI provider account.</p>
 
             {/* ── USAGE ── */}
             <h2 id="generate">Generate</h2>
@@ -261,7 +269,8 @@ Full notes → https://github.com/acme/backend/releases/tag/v2.4.0`}</pre>
               </thead>
               <tbody>
                 <tr><td>RELEASEHUB_GITHUB_TOKEN</td><td>GitHub OAuth token. Overrides the token saved by <code className="inline">releasehub auth login</code>.</td></tr>
-                <tr><td>RELEASEHUB_ANTHROPIC_KEY</td><td>Anthropic API key. Overrides the key saved by <code className="inline">releasehub ai add-key</code>.</td></tr>
+                <tr><td>RELEASEHUB_ANTHROPIC_KEY</td><td>Anthropic API key. Used when active provider is <code className="inline">anthropic</code>.</td></tr>
+                <tr><td>RELEASEHUB_OPENAI_KEY</td><td>OpenAI API key. Used when active provider is <code className="inline">openai</code>.</td></tr>
               </tbody>
             </table>
 
@@ -271,7 +280,9 @@ Full notes → https://github.com/acme/backend/releases/tag/v2.4.0`}</pre>
             <div className="code">
               <pre>{`{
   "github_token": "ghp_...",
+  "ai_provider": "anthropic",
   "anthropic_key": "sk-ant-...",
+  "openai_key": "sk-...",
   "default_format": "github-release"
 }`}</pre>
             </div>
@@ -294,9 +305,10 @@ Full notes → https://github.com/acme/backend/releases/tag/v2.4.0`}</pre>
                 <tr><th>Command</th><th>Description</th></tr>
               </thead>
               <tbody>
-                <tr><td>releasehub ai add-key</td><td>Prompt for an Anthropic API key and save it.</td></tr>
-                <tr><td>releasehub ai remove-key</td><td>Delete the saved Anthropic key.</td></tr>
-                <tr><td>releasehub ai status</td><td>Check whether a key is saved and whether it is valid.</td></tr>
+                <tr><td>releasehub ai add-key</td><td>Select a provider (Anthropic or OpenAI) and save your API key.</td></tr>
+                <tr><td>releasehub ai switch</td><td>Switch the active AI provider. Offers to add a key if one is missing.</td></tr>
+                <tr><td>releasehub ai remove-key</td><td>Remove a saved key. Prompts which provider to remove.</td></tr>
+                <tr><td>releasehub ai status</td><td>Show all providers, validate each saved key.</td></tr>
               </tbody>
             </table>
 

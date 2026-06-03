@@ -23,7 +23,9 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
       { title: 'Docs page', description: 'Full CLI reference with sidebar navigation — commands, flags, GitHub Actions workflow.', tag: 'Website' },
       { title: 'Changelog page', description: 'Versioned changelog with categories. Preview section on the landing page.', tag: 'Website' },
       { title: 'Roadmap page', description: 'Live board with tag filtering — Shipped / Now / Next / Exploring.', tag: 'Website' },
-      { title: 'CLI architecture', description: 'Command structure, auth flow, output formats, and CI/CD integration fully specced.', tag: 'CLI' },
+      { title: 'CLI auth & key management', description: 'GitHub OAuth device flow. AI provider selection (Anthropic / OpenAI) with releasehub ai add-key, switch, status.', tag: 'CLI' },
+      { title: 'GitHub data ingestion', description: 'Fetch merged PRs between two tags, extract labels and linked issues, auto-detect repo from git remote.', tag: 'CLI' },
+      { title: 'AI analysis — multi-provider', description: 'Classify and rewrite PRs using Anthropic (Claude) or OpenAI (GPT-4o). 20-PR batching for large releases.', tag: 'CLI' },
     ],
   },
   {
@@ -31,7 +33,7 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Now',
     color: 'var(--acc)',
     cards: [
-      { title: 'CLI build', description: 'npm package scaffold, GitHub OAuth, Anthropic key management, GitHub data ingestion.', tag: 'CLI' },
+      { title: 'Output generation', description: 'Generate github-release, changelog, and slack formats. stdout, --output file, --publish to GitHub.', tag: 'CLI' },
     ],
   },
   {
@@ -39,8 +41,8 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Next',
     color: 'var(--improve)',
     cards: [
-      { title: 'AI analysis & output generation', description: 'Claude API integration, classify PRs, generate github-release / changelog / slack formats.', tag: 'CLI' },
-      { title: 'npm publish & launch', description: 'npm install -g @releasehub/cli live. Hacker News, Product Hunt, social posts.', tag: 'Launch' },
+      { title: 'npm publish & launch', description: 'npm install -g @releasehub/cli live. README, sponsor links, analytics. Hacker News & Product Hunt.', tag: 'Launch' },
+      { title: 'Gemini support', description: 'Add Google Gemini as a third AI provider option.', tag: 'CLI' },
     ],
   },
   {
