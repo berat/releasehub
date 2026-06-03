@@ -1,16 +1,45 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Logo } from '@/components/ui/Logo'
 import { FOOTER_LINKS } from '@/data/landing'
 import { CopyCommand } from '@/components/ui/CopyCommand'
 
-// Hash anchor'lar (#) ve external linkler <a> kalır, route linkleri <Link> olur
+function useHashScroll() {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+
+  return (hash: string) => {
+    const scrollTo = () => {
+      const el = document.getElementById(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+    if (pathname === '/') {
+      scrollTo()
+    } else {
+      navigate('/')
+      setTimeout(scrollTo, 80)
+    }
+  }
+}
+
 function FooterLink({ href, label, external }: { href: string; label: string; external?: boolean }) {
+  const scrollToHash = useHashScroll()
+
+  // External link
   if (external || href.startsWith('http')) {
+    return <a href={href} target="_blank" rel="noopener noreferrer">{label}</a>
+  }
+
+  // Hash anchor (e.g. /#flow)
+  if (href.startsWith('/#')) {
+    const hash = href.slice(2)
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer">{label}</a>
+      <a href={href} onClick={(e) => { e.preventDefault(); scrollToHash(hash) }}>
+        {label}
+      </a>
     )
   }
-  // Internal links (routes and hash anchors) — React Router adds basename
+
+  // Internal route
   return <Link to={href}>{label}</Link>
 }
 

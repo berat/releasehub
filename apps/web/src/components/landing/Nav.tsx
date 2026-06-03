@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useLocation, Link } from 'react-router-dom'
+import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { useNavScroll } from '@/hooks/useNavScroll'
 import { useGitHubStars } from '@/hooks/useGitHubStars'
 import { Logo } from '@/components/ui/Logo'
 
 const NAV_LINKS = [
-  { to: '/#flow',       label: 'How it works'                    },
-  { to: '/#understand', label: 'AI understanding'                },
-  { to: '/#outputs',    label: 'Outputs'                         },
-  { to: '/#vs',         label: 'vs GitHub'                       },
-  { to: '/docs',        label: 'Docs'                            },
-  { to: '/changelog',   label: 'Changelog', highlight: true      },
+  { to: '/#flow',       label: 'How it works', hash: 'flow'       },
+  { to: '/#understand', label: 'AI understanding', hash: 'understand' },
+  { to: '/#outputs',    label: 'Outputs',      hash: 'outputs'    },
+  { to: '/#vs',         label: 'vs GitHub',    hash: 'vs'         },
+  { to: '/docs',        label: 'Docs',         hash: null          },
+  { to: '/changelog',   label: 'Changelog',    hash: null, highlight: true },
 ]
 
 interface NavCta {
@@ -26,12 +26,34 @@ const CTA_BY_PATH: Record<string, NavCta> = {
   '/changelog': { label: 'Get started', to: '/docs' },
 }
 
+function useHashScroll() {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+
+  return (hash: string, onDone?: () => void) => {
+    const scrollTo = () => {
+      const el = document.getElementById(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+      onDone?.()
+    }
+
+    if (pathname === '/') {
+      scrollTo()
+    } else {
+      navigate('/')
+      // Ana sayfanın render'lanması için kısa bekle
+      setTimeout(scrollTo, 80)
+    }
+  }
+}
+
 export function Nav() {
   const scrolled = useNavScroll()
   const { pathname } = useLocation()
   const stars = useGitHubStars('berat/releasehub')
   const [menuOpen, setMenuOpen] = useState(false)
   const cta = CTA_BY_PATH[pathname] ?? CTA_BY_PATH['/']
+  const scrollToHash = useHashScroll()
 
   useEffect(() => { setMenuOpen(false) }, [pathname])
   useEffect(() => {
@@ -39,26 +61,39 @@ export function Nav() {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
+  const renderLink = (to: string, label: string, hash: string | null | undefined, highlight?: boolean, extraClass?: string, onClose?: () => void) => {
+    if (hash) {
+      return (
+        <a
+          key={to}
+          href={`#${hash}`}
+          className={extraClass}
+          onClick={(e) => { e.preventDefault(); scrollToHash(hash, onClose) }}
+        >
+          {label}
+        </a>
+      )
+    }
+    return highlight
+      ? (
+        <Link key={to} to={to} className={`nav-changelog${extraClass ? ` ${extraClass}` : ''}`} onClick={onClose}>
+          <span className="nav-changelog-dot" />
+          {label}
+        </Link>
+      )
+      : <Link key={to} to={to} className={extraClass} onClick={onClose}>{label}</Link>
+  }
+
   return (
     <>
       <header className={`nav${scrolled ? ' scrolled' : ''}`} id="nav">
         <div className="wrap nav-inner">
           <Logo />
 
-          {/* Desktop links */}
           <nav className="nav-links" aria-label="Primary">
-            {NAV_LINKS.map(({ to, label, highlight }) => (
-              highlight
-                ? (
-                  <Link key={to} to={to} className="nav-changelog">
-                    <span className="nav-changelog-dot" />
-                    {label}
-                  </Link>
-                )
-                : (
-                  <Link key={to} to={to}>{label}</Link>
-                )
-            ))}
+            {NAV_LINKS.map(({ to, label, hash, highlight }) =>
+              renderLink(to, label, hash, highlight)
+            )}
           </nav>
 
           <div className="nav-cta">
@@ -87,25 +122,17 @@ export function Nav() {
         </div>
       </header>
 
-      {/* Mobile drawer */}
       {menuOpen && (
         <div className="mobile-menu" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div className="mobile-menu-inner">
             <nav className="mobile-menu-links">
-              {NAV_LINKS.map(({ to, label, highlight }) => (
-                highlight
-                  ? (
-                    <Link key={to} to={to} className="mobile-menu-link mobile-menu-link--highlight" onClick={() => setMenuOpen(false)}>
-                      <span className="nav-changelog-dot" />
-                      {label}
-                    </Link>
-                  )
-                  : (
-                    <Link key={to} to={to} className="mobile-menu-link" onClick={() => setMenuOpen(false)}>
-                      {label}
-                    </Link>
-                  )
-              ))}
+              {NAV_LINKS.map(({ to, label, hash, highlight }) =>
+                renderLink(
+                  to, label, hash, highlight,
+                  `mobile-menu-link${highlight ? ' mobile-menu-link--highlight' : ''}`,
+                  () => setMenuOpen(false)
+                )
+              )}
             </nav>
             <div className="mobile-menu-footer">
               <Link className="btn btn-acc" to={cta.to} style={{ width: '100%', justifyContent: 'center' }} onClick={() => setMenuOpen(false)}>
