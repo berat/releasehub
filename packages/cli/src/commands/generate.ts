@@ -1,11 +1,13 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import ora from 'ora'
+import { writeFileSync } from 'fs'
 import { detectRepo, parseRepo } from '../lib/git.js'
-import { fetchPullRequests } from '../lib/github.js'
+import { fetchPullRequests, publishGitHubRelease } from '../lib/github.js'
 import { analyzePullRequests } from '../lib/ai.js'
 import { getActiveAIKey, getActiveProvider, AI_PROVIDER_LABELS } from '../lib/config.js'
 import { handleError, AuthError } from '../lib/errors.js'
+import { formatOutput } from '../lib/formatters.js'
 
 export interface GenerateOptions {
   from: string
@@ -21,13 +23,26 @@ export function registerGenerateCommand(program: Command): void {
   program
     .command('generate')
     .description('Generate release notes from merged pull requests')
-    .requiredOption('--from <tag>', 'Start tag (e.g. v2.3.0)')
-    .requiredOption('--to <tag>', 'End tag (e.g. v2.4.0)')
-    .option('--repo <repo>', 'Repository in owner/name format (defaults to git remote)')
+    .addHelpText('after', `
+${chalk.bold('Formats:')}
+  ${chalk.cyan('github-release')}  ${chalk.dim('Markdown for a GitHub Release page (default)')}
+  ${chalk.cyan('changelog')}       ${chalk.dim('Keep a Changelog format, with date')}
+  ${chalk.cyan('slack')}           ${chalk.dim('Compact Slack message with emoji')}
+
+${chalk.bold('Examples:')}
+  ${chalk.cyan('releasehub generate --from v1.0.0 --to v1.1.0')}
+  ${chalk.cyan('releasehub generate --from v1.0.0 --to v1.1.0 --format slack')}
+  ${chalk.cyan('releasehub generate --from v1.0.0 --to v1.1.0 --output release.md')}
+  ${chalk.cyan('releasehub generate --from v1.0.0 --to v1.1.0 --publish')}
+  ${chalk.cyan('releasehub generate --from v1.0.0 --to v1.1.0 --quiet')}  ${chalk.dim('(CI mode — stdout only)')}
+    `)
+    .requiredOption('--from <tag>', 'Start tag (e.g. v1.0.0)')
+    .requiredOption('--to <tag>', 'End tag (e.g. v1.1.0)')
+    .option('--repo <repo>', 'Repository in owner/name format (auto-detected from git remote if omitted)')
     .option('--format <format>', 'Output format: github-release | changelog | slack', 'github-release')
-    .option('--output <file>', 'Write output to a file instead of stdout')
-    .option('--publish', 'Publish directly as a GitHub Release')
-    .option('--quiet', 'Suppress progress messages (useful in CI)')
+    .option('--output <file>', 'Write output to a file instead of printing to stdout')
+    .option('--publish', 'Publish directly as a GitHub Release via the API')
+    .option('--quiet', 'Suppress progress output — prints only the final result (useful in CI)')
     .action(async (options: GenerateOptions) => {
       try {
         const log = (msg: string) => { if (!options.quiet) process.stderr.write(msg + '\n') }
@@ -66,35 +81,36 @@ export function registerGenerateCommand(program: Command): void {
         const hidden = changes.filter(c => !c.visible)
         aiSpinner.succeed(`Analyzed — ${chalk.bold(visible.length)} user-facing, ${chalk.dim(`${hidden.length} hidden`)}`)
 
-        // 5. TODO M3: output generation
-        log('')
-        log(chalk.yellow('  ⚠ Output generation (M3) coming next.'))
-        log(chalk.dim('  Preview of what was found:'))
-        log('')
+        // 5. Format output
+        const output = formatOutput(options.format, { version: options.to, changes })
 
-        for (const change of visible) {
-          log(`  ${categoryLabel(change.category)} ${change.rewritten_title}`)
-        }
-
-        if (hidden.length > 0) {
+        // 6. Write or print
+        if (options.output) {
+          writeFileSync(options.output, output, 'utf8')
           log('')
-          log(chalk.dim(`  ${hidden.length} internal change(s) hidden.`))
+          log(chalk.green(`  ✓ Written to ${options.output}`))
+          log('')
+        } else if (!options.publish) {
+          // Only print to stdout if not publishing (publish prints the URL instead)
+          process.stdout.write(output)
         }
 
-        log('')
+        // 7. Publish as GitHub Release
+        if (options.publish) {
+          const publishSpinner = ora({ text: 'Publishing GitHub Release...', isSilent: options.quiet }).start()
+
+          // --publish only makes sense with github-release format
+          const releaseBody = options.format === 'github-release'
+            ? output
+            : formatOutput('github-release', { version: options.to, changes })
+
+          const release = await publishGitHubRelease(repo, options.to, releaseBody)
+          publishSpinner.succeed(`Published: ${chalk.cyan(release.html_url)}`)
+          log('')
+        }
 
       } catch (err) {
         handleError(err)
       }
     })
-}
-
-function categoryLabel(category: string): string {
-  switch (category) {
-    case 'feature':     return chalk.blue('[Feature]    ')
-    case 'improvement': return chalk.cyan('[Improvement]')
-    case 'bugfix':      return chalk.yellow('[Fix]        ')
-    case 'breaking':    return chalk.red('[Breaking]   ')
-    default:            return chalk.dim('[Internal]   ')
-  }
 }

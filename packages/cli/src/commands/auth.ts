@@ -1,12 +1,11 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import ora from 'ora'
-import { createServer } from 'http'
-import { readConfig, updateConfig, writeConfig } from '../lib/config.js'
+import { updateConfig, writeConfig, readConfig } from '../lib/config.js'
 import { handleError, ApiError } from '../lib/errors.js'
 
 // GitHub OAuth device flow
-const GITHUB_CLIENT_ID = 'Ov23liExample000000' // replace with real client ID at publish
+const GITHUB_CLIENT_ID = process.env.RELEASEHUB_GITHUB_CLIENT_ID ?? 'Ov23lilDl2r3neGz7d7P'
 
 async function requestDeviceCode(): Promise<{
   device_code: string
@@ -27,7 +26,7 @@ async function requestDeviceCode(): Promise<{
     }),
   })
 
-  if (!res.ok) throw new ApiError('Failed to initiate GitHub OAuth', res.status)
+  if (!res.ok) throw new ApiError('Failed to connect to GitHub. Check your internet connection and try again.', res.status)
   return res.json() as Promise<{
     device_code: string
     user_code: string
@@ -68,7 +67,9 @@ async function pollForToken(
     if (data.access_token) return data.access_token
     if (data.error === 'authorization_pending') continue
     if (data.error === 'slow_down') { await delay(5000); continue }
-    throw new ApiError(data.error_description ?? 'OAuth failed')
+    if (data.error === 'expired_token') throw new ApiError('The code expired. Run releasehub auth login again.')
+    if (data.error === 'access_denied') throw new ApiError('Authorization was cancelled.')
+    throw new ApiError(data.error_description ?? 'GitHub authorization failed.')
   }
 }
 
@@ -79,27 +80,39 @@ async function getGitHubUser(token: string): Promise<{ login: string; name: stri
       'User-Agent': '@releasehub/cli',
     },
   })
-  if (!res.ok) throw new ApiError('Failed to fetch GitHub user', res.status)
+  if (!res.ok) throw new ApiError('Failed to fetch your GitHub profile.', res.status)
   return res.json() as Promise<{ login: string; name: string }>
 }
 
 export function registerAuthCommands(program: Command): void {
-  const auth = program.command('auth').description('Manage GitHub authentication')
+  const auth = program
+    .command('auth')
+    .description('Manage GitHub authentication')
+    .addHelpText('after', `
+${chalk.bold('Commands:')}
+  ${chalk.cyan('releasehub auth login')}   ${chalk.dim('Connect your GitHub account')}
+  ${chalk.cyan('releasehub auth logout')}  ${chalk.dim('Disconnect and remove saved token')}
+    `)
 
   auth
     .command('login')
     .description('Connect your GitHub account via OAuth')
+    .addHelpText('after', `
+${chalk.dim('Opens a GitHub device authorization flow in your browser.')}
+${chalk.dim('Your token is stored locally in ~/.releasehub/config.json')}
+    `)
     .action(async () => {
       try {
         console.log('')
-        const spinner = ora('Requesting device code from GitHub...').start()
+        const spinner = ora('Connecting to GitHub...').start()
         const { device_code, user_code, verification_uri, interval } = await requestDeviceCode()
         spinner.stop()
 
-        console.log(chalk.bold('\nOpen this URL in your browser:'))
-        console.log(chalk.cyan(`  ${verification_uri}`))
-        console.log(chalk.bold('\nEnter this code when prompted:'))
-        console.log(chalk.yellow.bold(`  ${user_code}`))
+        console.log(chalk.bold('  Open this URL in your browser:'))
+        console.log(`  ${chalk.cyan(verification_uri)}`)
+        console.log('')
+        console.log(chalk.bold('  Enter this code when prompted:'))
+        console.log(`  ${chalk.yellow.bold(user_code)}`)
         console.log('')
 
         const waiting = ora('Waiting for authorization...').start()
@@ -107,7 +120,9 @@ export function registerAuthCommands(program: Command): void {
         const user = await getGitHubUser(token)
 
         updateConfig({ github_token: token })
-        waiting.succeed(chalk.green(`Authenticated as ${chalk.bold(user.login)}`))
+        waiting.succeed(`Authenticated as ${chalk.bold('@' + user.login)}`)
+        console.log('')
+        console.log(chalk.dim('  Next: releasehub ai add-key'))
         console.log('')
       } catch (err) {
         handleError(err)
@@ -116,17 +131,21 @@ export function registerAuthCommands(program: Command): void {
 
   auth
     .command('logout')
-    .description('Remove saved GitHub token')
+    .description('Disconnect your GitHub account and remove saved token')
     .action(() => {
       try {
         const config = readConfig()
         if (!config.github_token) {
-          console.log(chalk.yellow('No GitHub token found.'))
+          console.log('')
+          console.log(chalk.yellow('  You are not logged in.'))
+          console.log('')
           return
         }
         delete config.github_token
         writeConfig(config)
-        console.log(chalk.green('✔ Logged out successfully.'))
+        console.log('')
+        console.log(chalk.green('  ✔ Logged out successfully.'))
+        console.log('')
       } catch (err) {
         handleError(err)
       }

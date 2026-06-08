@@ -23,7 +23,7 @@ export interface Tag {
 function getOctokit(): Octokit {
   const token = getGitHubToken()
   if (!token) throw new AuthError('No GitHub token found. Run: releasehub auth login')
-  return new Octokit({ auth: token })
+  return new Octokit({ auth: token, request: { fetch } })
 }
 
 /**
@@ -151,6 +151,45 @@ export async function fetchPullRequests(
       const status = (err as { status: number }).status
       if (status === 401) throw new AuthError('GitHub token is invalid or expired. Run: releasehub auth login')
       if (status === 404) throw new ApiError(`Repository or tag not found. Check --from and --to values.`, 404)
+      if (status === 403) throw new ApiError('GitHub API rate limit exceeded. Wait a moment and try again.', 403)
+    }
+    throw err
+  }
+}
+
+export interface GitHubRelease {
+  id: number
+  html_url: string
+  name: string
+}
+
+/**
+ * Create a GitHub Release for the given tag with the provided body.
+ */
+export async function publishGitHubRelease(
+  repo: RepoInfo,
+  tag: string,
+  body: string,
+): Promise<GitHubRelease> {
+  const octokit = getOctokit()
+
+  try {
+    const { data } = await octokit.rest.repos.createRelease({
+      owner: repo.owner,
+      repo: repo.name,
+      tag_name: tag,
+      name: tag,
+      body,
+      draft: false,
+      prerelease: tag.includes('-'),
+    })
+
+    return { id: data.id, html_url: data.html_url, name: data.name ?? tag }
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'status' in err) {
+      const status = (err as { status: number }).status
+      if (status === 401) throw new AuthError('GitHub token is invalid or expired. Run: releasehub auth login')
+      if (status === 422) throw new ApiError(`A release for tag "${tag}" already exists.`, 422)
       if (status === 403) throw new ApiError('GitHub API rate limit exceeded. Wait a moment and try again.', 403)
     }
     throw err

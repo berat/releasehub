@@ -31,13 +31,24 @@ export class ApiError extends ReleaseHubError {
   }
 }
 
+const HINTS: Record<string, string> = {
+  AuthError:   'Run: releasehub auth login',
+  ConfigError: 'Run: releasehub --help for usage',
+}
+
 export function handleError(err: unknown): never {
+  console.error('')
+
   if (err instanceof ReleaseHubError) {
-    console.error(chalk.red(`✖ ${err.message}`))
+    console.error(`  ${chalk.red('✖')} ${err.message}`)
+    const hint = HINTS[err.name]
+    if (hint) console.error(`  ${chalk.dim(hint)}`)
   } else if (err instanceof Error) {
-    console.error(chalk.red(`✖ ${err.message}`))
+    console.error(`  ${chalk.red('✖')} ${err.message}`)
   } else {
-    console.error(chalk.red('✖ An unexpected error occurred'))
+    console.error(`  ${chalk.red('✖')} An unexpected error occurred.`)
   }
+
+  console.error('')
   process.exit(1)
 }

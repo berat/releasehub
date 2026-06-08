@@ -75,7 +75,10 @@ function buildUserPrompt(prs: PullRequest[]): string {
 }
 
 function parseResponse(raw: string): AnalyzedChange[] {
-  const cleaned = raw.replace(/```(?:json)?\n?/g, '').trim()
+  const cleaned = raw
+    .replace(/```(?:json)?\n?/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+    .trim()
   return JSON.parse(cleaned) as AnalyzedChange[]
 }
 
@@ -123,13 +126,10 @@ async function analyzeWithOpenAI(prs: PullRequest[]): Promise<AnalyzedChange[]> 
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: buildUserPrompt(batch) },
       ],
-      response_format: { type: 'json_object' },
     })
     const content = completion.choices[0]?.message?.content
     if (!content) throw new ApiError('Unexpected response from OpenAI API')
-    const parsed = JSON.parse(content) as AnalyzedChange[] | { changes: AnalyzedChange[] }
-    const changes = Array.isArray(parsed) ? parsed : parsed.changes
-    results.push(...changes)
+    results.push(...parseResponse(content))
   }
 
   return results

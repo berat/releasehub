@@ -77,14 +77,25 @@ async function addKeyForProvider(provider: AIProvider): Promise<void> {
 
   const configKey = provider === 'anthropic' ? 'anthropic_key' : 'openai_key'
   updateConfig({ [configKey]: key, ai_provider: provider })
-  spinner.succeed(chalk.green(`${AI_PROVIDER_LABELS[provider]} key saved and set as active provider.`))
+  spinner.succeed(`${AI_PROVIDER_LABELS[provider]} key saved and set as active provider.`)
+  console.log('')
+  console.log(chalk.dim('  Next: releasehub generate --from <tag> --to <tag>'))
   console.log('')
 }
 
 // ─── Commands ─────────────────────────────────────────────────────────────────
 
 export function registerAICommands(program: Command): void {
-  const ai = program.command('ai').description('Manage AI provider and keys')
+  const ai = program
+    .command('ai')
+    .description('Manage AI provider and keys')
+    .addHelpText('after', `
+${chalk.bold('Commands:')}
+  ${chalk.cyan('releasehub ai add-key')}     ${chalk.dim('Add an Anthropic or OpenAI key')}
+  ${chalk.cyan('releasehub ai switch')}      ${chalk.dim('Switch active AI provider')}
+  ${chalk.cyan('releasehub ai remove-key')}  ${chalk.dim('Remove a saved key')}
+  ${chalk.cyan('releasehub ai status')}      ${chalk.dim('Show provider status and validate keys')}
+    `)
 
   // ── add-key ───────────────────────────────────────────────────────────────
   ai
