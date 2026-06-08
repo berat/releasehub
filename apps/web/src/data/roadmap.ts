@@ -33,7 +33,7 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Now',
     color: 'var(--acc)',
     cards: [
-      { title: 'Output generation', description: 'Generate github-release, changelog, and slack formats. stdout, --output file, --publish to GitHub.', tag: 'CLI' },
+      { title: 'Output generation (M3)', description: 'Generate github-release, changelog, and slack formats from AI analysis. stdout, --output file, --publish to GitHub.', tag: 'CLI' },
     ],
   },
   {
@@ -41,7 +41,7 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Next',
     color: 'var(--improve)',
     cards: [
-      { title: 'npm publish & launch', description: 'npm install -g @releasehub/cli live. README, sponsor links, analytics. Hacker News & Product Hunt.', tag: 'Launch' },
+      { title: 'Polish & launch (M4)', description: 'Error handling, --help improvements, README update, npm publish. Hacker News & Product Hunt.', tag: 'Launch' },
       { title: 'Gemini support', description: 'Add Google Gemini as a third AI provider option.', tag: 'CLI' },
     ],
   },
