@@ -150,50 +150,51 @@ export function DocsPage() {
             <p>Use <code className="inline">--format</code> to choose the output. Default is <code className="inline">github-release</code>.</p>
 
             <h3>github-release</h3>
-            <p>Grouped markdown ready to paste into a GitHub Release.</p>
+            <p>Grouped markdown ready to paste into a GitHub Release. Includes an auto-generated summary sentence.</p>
             <CodeBlock>{'releasehub generate --from v2.3.0 --to v2.4.0 --format github-release'}</CodeBlock>
             <div className="code">
-              <pre>{`## What's New in v2.4.0
+              <pre>{`## v2.4.0
 
-### 🚀 New Features
+This release includes 1 new feature, 1 improvement and 1 bug fix.
+
+### ✨ New Features
+
 - Sign in with Apple is now available
 
-### ⚡ Improvements
+### 🔧 Improvements
+
 - Dashboard now loads significantly faster
 
 ### 🐛 Bug Fixes
-- Fixed an issue that could log you out unexpectedly
 
----
-**Full Changelog:** https://github.com/acme/backend/compare/v2.3.0...v2.4.0`}</pre>
+- Fixed an issue that could log you out unexpectedly`}</pre>
             </div>
 
             <h3>changelog</h3>
-            <p>Clean, date-stamped changelog entry.</p>
+            <p>Keep a Changelog format with today's date. Append to your <code className="inline">CHANGELOG.md</code>.</p>
             <CodeBlock>{'releasehub generate --from v2.3.0 --to v2.4.0 --format changelog'}</CodeBlock>
             <div className="code">
-              <pre>{`## v2.4.0 — 2026-06-03
+              <pre>{`## [v2.4.0] — 2026-06-08
 
-### New
+### ✨ New Features
+
 - Sign in with Apple is now available
 
-### Fixed
+### 🐛 Bug Fixes
+
 - Fixed an issue that could log you out unexpectedly`}</pre>
             </div>
 
             <h3>slack</h3>
-            <p>Short Slack-ready message with highlights.</p>
+            <p>Compact Slack message. Shows up to 6 highlights — breaking changes always included, remaining slots filled by priority. Extra items grouped as a count.</p>
             <CodeBlock>{'releasehub generate --from v2.3.0 --to v2.4.0 --format slack'}</CodeBlock>
             <div className="code">
-              <pre>{`🚀 *backend* shipped v2.4.0
+              <pre>{`*🚀 v2.4.0*
 
-2 new feature(s), 1 improvement(s), 2 bug fix(es)
-
-Highlights:
-• Sign in with Apple is now available
-• Dashboard now loads significantly faster
-
-Full notes → https://github.com/acme/backend/releases/tag/v2.4.0`}</pre>
+✨ Sign in with Apple is now available
+🔧 Dashboard now loads significantly faster
+🐛 Fixed an issue that could log you out unexpectedly
+_+ 4 more updates_`}</pre>
             </div>
 
             <h2 id="flags">All flags</h2>
@@ -203,8 +204,8 @@ Full notes → https://github.com/acme/backend/releases/tag/v2.4.0`}</pre>
               </thead>
               <tbody>
                 <tr><td>--repo</td><td>git remote</td><td>Repository in <code className="inline">owner/name</code> format. Inferred from git remote if omitted.</td></tr>
-                <tr><td>--from</td><td>required</td><td>Start tag or date (e.g. <code className="inline">v2.3.0</code> or <code className="inline">2026-05-01</code>).</td></tr>
-                <tr><td>--to</td><td>required</td><td>End tag or date.</td></tr>
+                <tr><td>--from</td><td>required</td><td>Start tag (e.g. <code className="inline">v2.3.0</code>).</td></tr>
+                <tr><td>--to</td><td>required</td><td>End tag (e.g. <code className="inline">v2.4.0</code>).</td></tr>
                 <tr><td>--format</td><td>github-release</td><td>Output format: <code className="inline">github-release</code>, <code className="inline">changelog</code>, <code className="inline">slack</code>.</td></tr>
                 <tr><td>--output</td><td>stdout</td><td>Write output to a file instead of printing.</td></tr>
                 <tr><td>--publish</td><td>false</td><td>Create a GitHub Release via the API after generating.</td></tr>
@@ -282,8 +283,7 @@ Full notes → https://github.com/acme/backend/releases/tag/v2.4.0`}</pre>
   "github_token": "ghp_...",
   "ai_provider": "anthropic",
   "anthropic_key": "sk-ant-...",
-  "openai_key": "sk-...",
-  "default_format": "github-release"
+  "openai_key": "sk-..."
 }`}</pre>
             </div>
             <p>The file is set to <code className="inline">chmod 600</code> — readable only by your user. Environment variables always take precedence over this file.</p>
