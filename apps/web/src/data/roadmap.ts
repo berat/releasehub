@@ -19,6 +19,8 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Shipped',
     color: 'var(--success)',
     cards: [
+      { title: 'Output generation', description: 'Generate github-release, changelog, and slack formats. stdout, --output file, --publish to GitHub Release API.', tag: 'CLI' },
+      { title: 'CLI UX polish', description: 'Onboarding flow with next-step hints, improved --help across all commands, actionable error messages.', tag: 'CLI' },
       { title: 'AI analysis — multi-provider', description: 'Classify and rewrite PRs using Anthropic (Claude) or OpenAI (GPT-4o). 20-PR batching for large releases.', tag: 'CLI' },
       { title: 'GitHub data ingestion', description: 'Fetch merged PRs between two tags, extract labels and linked issues, auto-detect repo from git remote.', tag: 'CLI' },
       { title: 'CLI auth & key management', description: 'GitHub OAuth device flow. AI provider selection (Anthropic / OpenAI) with releasehub ai add-key, switch, status.', tag: 'CLI' },
@@ -33,7 +35,7 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Now',
     color: 'var(--acc)',
     cards: [
-      { title: 'Output generation (M3)', description: 'Generate github-release, changelog, and slack formats from AI analysis. stdout, --output file, --publish to GitHub.', tag: 'CLI' },
+      { title: 'README & docs update', description: 'Full README with installation, usage examples, GitHub Actions workflow, and npm badge.', tag: 'Launch' },
     ],
   },
   {
@@ -41,7 +43,7 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Next',
     color: 'var(--improve)',
     cards: [
-      { title: 'Polish & launch (M4)', description: 'Error handling, --help improvements, README update, npm publish. Hacker News & Product Hunt.', tag: 'Launch' },
+      { title: 'npm publish & launch', description: 'Publish @releasehub/cli to npm. Hacker News Show HN, Product Hunt, and X announcement.', tag: 'Launch' },
       { title: 'Gemini support', description: 'Add Google Gemini as a third AI provider option.', tag: 'CLI' },
     ],
   },

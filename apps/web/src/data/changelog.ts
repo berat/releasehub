@@ -10,6 +10,40 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v0.6.0',
+    date: 'June 8, 2026',
+    summary: 'M3 complete — output generation in three formats, plus CLI UX polish across all commands.',
+    changes: [
+      {
+        category: 'feature',
+        items: [
+          'releasehub generate --format github-release — GitHub Release markdown with auto-generated summary',
+          'releasehub generate --format changelog — Keep a Changelog format with date',
+          'releasehub generate --format slack — compact Slack message, max 6 items with overflow count',
+          'releasehub generate --output <file> — write output to a file instead of stdout',
+          'releasehub generate --publish — publish directly as a GitHub Release via the API',
+        ],
+      },
+      {
+        category: 'improvement',
+        items: [
+          'Getting started flow: each command shows the next step after completion',
+          '--help improved across all commands with examples and format descriptions',
+          'Version read dynamically from package.json',
+          'Error messages now include actionable hints',
+          'OpenAI response parsing made robust — handles any JSON wrapping',
+        ],
+      },
+      {
+        category: 'bugfix',
+        items: [
+          'Octokit fetch issue fixed for Node 18+ environments',
+          'Control character sanitization added for OpenAI responses',
+        ],
+      },
+    ],
+  },
+  {
     version: 'v0.5.0',
     date: 'June 4, 2026',
     summary: 'CLI M1 & M2 complete — GitHub data ingestion and multi-provider AI analysis.',
