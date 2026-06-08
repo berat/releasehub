@@ -2,9 +2,10 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import ora from 'ora'
 import { detectRepo, parseRepo } from '../lib/git.js'
-import { fetchPullRequests, fetchTags } from '../lib/github.js'
-import { handleError } from '../lib/errors.js'
-import type { PullRequest } from '../lib/github.js'
+import { fetchPullRequests } from '../lib/github.js'
+import { analyzePullRequests } from '../lib/ai.js'
+import { getActiveAIKey, getActiveProvider, AI_PROVIDER_LABELS } from '../lib/config.js'
+import { handleError, AuthError } from '../lib/errors.js'
 
 export interface GenerateOptions {
   from: string
@@ -29,42 +30,57 @@ export function registerGenerateCommand(program: Command): void {
     .option('--quiet', 'Suppress progress messages (useful in CI)')
     .action(async (options: GenerateOptions) => {
       try {
-        const log = (msg: string) => { if (!options.quiet) console.log(msg) }
+        const log = (msg: string) => { if (!options.quiet) process.stderr.write(msg + '\n') }
 
         log('')
 
         // 1. Resolve repo
         const repo = options.repo ? parseRepo(options.repo) : detectRepo()
-        log(chalk.dim(`  repo   : ${repo.owner}/${repo.name}`))
-        log(chalk.dim(`  from   : ${options.from}`))
-        log(chalk.dim(`  to     : ${options.to}`))
-        log(chalk.dim(`  format : ${options.format}`))
+        log(chalk.dim(`  repo     : ${repo.owner}/${repo.name}`))
+        log(chalk.dim(`  range    : ${options.from} → ${options.to}`))
+        log(chalk.dim(`  format   : ${options.format}`))
+        log(chalk.dim(`  provider : ${AI_PROVIDER_LABELS[getActiveProvider()]}`))
         log('')
 
-        // 2. Fetch PRs
-        const spinner = ora({ text: 'Fetching pull requests...', isSilent: options.quiet }).start()
+        // 2. Check AI key
+        if (!getActiveAIKey()) {
+          throw new AuthError('No AI key found. Run: releasehub ai add-key')
+        }
+
+        // 3. Fetch PRs
+        const prSpinner = ora({ text: 'Fetching pull requests...', isSilent: options.quiet }).start()
         const prs = await fetchPullRequests(repo, options.from, options.to)
 
         if (prs.length === 0) {
-          spinner.warn(chalk.yellow('No merged pull requests found in this range.'))
+          prSpinner.warn(chalk.yellow('No merged pull requests found in this range.'))
           log('')
           process.exit(0)
         }
 
-        spinner.succeed(`Fetched ${chalk.bold(prs.length)} pull requests`)
+        prSpinner.succeed(`Fetched ${chalk.bold(prs.length)} pull requests`)
 
-        // 3. TODO M2: AI analysis
-        // For now, print raw PR list as a preview
+        // 4. AI analysis
+        const aiSpinner = ora({ text: 'Analyzing with AI...', isSilent: options.quiet }).start()
+        const { changes } = await analyzePullRequests(prs)
+        const visible = changes.filter(c => c.visible)
+        const hidden = changes.filter(c => !c.visible)
+        aiSpinner.succeed(`Analyzed — ${chalk.bold(visible.length)} user-facing, ${chalk.dim(`${hidden.length} hidden`)}`)
+
+        // 5. TODO M3: output generation
         log('')
-        log(chalk.bold('  Pull requests in this range:'))
+        log(chalk.yellow('  ⚠ Output generation (M3) coming next.'))
+        log(chalk.dim('  Preview of what was found:'))
         log('')
-        for (const pr of prs) {
-          const labels = pr.labels.length ? chalk.dim(` [${pr.labels.join(', ')}]`) : ''
-          log(`  ${chalk.dim(`#${pr.number}`)} ${pr.title}${labels}`)
+
+        for (const change of visible) {
+          log(`  ${categoryLabel(change.category)} ${change.rewritten_title}`)
         }
-        log('')
-        log(chalk.yellow('  ⚠ AI analysis (M2) coming next — output generation not yet implemented.'))
-        log(chalk.dim('  Follow progress at releasehub.app/roadmap'))
+
+        if (hidden.length > 0) {
+          log('')
+          log(chalk.dim(`  ${hidden.length} internal change(s) hidden.`))
+        }
+
         log('')
 
       } catch (err) {
@@ -73,4 +89,12 @@ export function registerGenerateCommand(program: Command): void {
     })
 }
 
-export type { PullRequest }
+function categoryLabel(category: string): string {
+  switch (category) {
+    case 'feature':     return chalk.blue('[Feature]    ')
+    case 'improvement': return chalk.cyan('[Improvement]')
+    case 'bugfix':      return chalk.yellow('[Fix]        ')
+    case 'breaking':    return chalk.red('[Breaking]   ')
+    default:            return chalk.dim('[Internal]   ')
+  }
+}

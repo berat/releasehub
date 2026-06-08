@@ -2,129 +2,218 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import ora from 'ora'
 import * as readline from 'readline'
-import { readConfig, updateConfig, writeConfig, getAnthropicKey } from '../lib/config.js'
+import {
+  readConfig, updateConfig, writeConfig,
+  getKeyForProvider, getActiveProvider,
+  AI_PROVIDERS, AI_PROVIDER_LABELS, AI_PROVIDER_KEY_URLS,
+  type AIProvider,
+} from '../lib/config.js'
 import { handleError } from '../lib/errors.js'
 
-// Future providers will be added here:
-// type Provider = 'anthropic' | 'openai' | 'gemini'
-// For now only Anthropic is supported.
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function promptKey(label: string): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  })
+function prompt(question: string): Promise<string> {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   return new Promise(resolve => {
-    rl.question(chalk.bold(`  ${label}: `), answer => {
+    rl.question(question, answer => { rl.close(); resolve(answer.trim()) })
+  })
+}
+
+function promptSelect(question: string, options: string[]): Promise<number> {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  return new Promise(resolve => {
+    console.log('')
+    console.log(chalk.bold(`  ${question}`))
+    options.forEach((opt, i) => {
+      console.log(`  ${chalk.dim(`${i + 1}.`)} ${opt}`)
+    })
+    console.log('')
+    rl.question(chalk.bold('  Enter number: '), answer => {
       rl.close()
-      resolve(answer.trim())
+      const n = parseInt(answer.trim(), 10)
+      resolve(isNaN(n) ? 0 : n - 1)
     })
   })
 }
 
-async function validateAnthropicKey(key: string): Promise<boolean> {
+async function validateKey(provider: AIProvider, key: string): Promise<boolean> {
   try {
-    const res = await fetch('https://api.anthropic.com/v1/models', {
-      headers: {
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
-    })
-    return res.ok
+    if (provider === 'anthropic') {
+      const res = await fetch('https://api.anthropic.com/v1/models', {
+        headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      })
+      return res.ok
+    }
+    if (provider === 'openai') {
+      const res = await fetch('https://api.openai.com/v1/models', {
+        headers: { Authorization: `Bearer ${key}` },
+      })
+      return res.ok
+    }
+    return false
   } catch {
     return false
   }
 }
 
-export function registerAICommands(program: Command): void {
-  const ai = program.command('ai').description('Manage AI provider keys')
+async function addKeyForProvider(provider: AIProvider): Promise<void> {
+  console.log('')
+  console.log(chalk.dim(`  Get your key at: ${AI_PROVIDER_KEY_URLS[provider]}`))
+  console.log('')
 
+  const key = await prompt(chalk.bold(`  ${AI_PROVIDER_LABELS[provider]} API key: `))
+  if (!key) {
+    console.log(chalk.red('  ✖ No key provided.'))
+    process.exit(1)
+  }
+
+  const spinner = ora('Validating key...').start()
+  const valid = await validateKey(provider, key)
+
+  if (!valid) {
+    spinner.fail(chalk.red('Key validation failed. Check your key and try again.'))
+    process.exit(1)
+  }
+
+  const configKey = provider === 'anthropic' ? 'anthropic_key' : 'openai_key'
+  updateConfig({ [configKey]: key, ai_provider: provider })
+  spinner.succeed(chalk.green(`${AI_PROVIDER_LABELS[provider]} key saved and set as active provider.`))
+  console.log('')
+}
+
+// ─── Commands ─────────────────────────────────────────────────────────────────
+
+export function registerAICommands(program: Command): void {
+  const ai = program.command('ai').description('Manage AI provider and keys')
+
+  // ── add-key ───────────────────────────────────────────────────────────────
   ai
     .command('add-key')
-    .description('Save your Anthropic API key')
-    // Future: .option('--provider <provider>', 'AI provider: anthropic | openai | gemini', 'anthropic')
+    .description('Add an AI provider key (select provider interactively)')
     .action(async () => {
       try {
-        console.log('')
-        console.log(chalk.dim('  Get your key at: https://console.anthropic.com'))
-        console.log('')
-
-        const key = await promptKey('Anthropic API key')
-        if (!key) {
-          console.log(chalk.red('  ✖ No key provided.'))
+        const idx = await promptSelect(
+          'Which AI provider?',
+          AI_PROVIDERS.map(p => AI_PROVIDER_LABELS[p]),
+        )
+        const provider = AI_PROVIDERS[idx]
+        if (!provider) {
+          console.log(chalk.red('  ✖ Invalid selection.'))
           process.exit(1)
         }
-
-        const spinner = ora('Validating key...').start()
-        const valid = await validateAnthropicKey(key)
-
-        if (!valid) {
-          spinner.fail(chalk.red('Key validation failed. Check your key and try again.'))
-          process.exit(1)
-        }
-
-        updateConfig({ anthropic_key: key, ai_provider: 'anthropic' })
-        spinner.succeed(chalk.green('Anthropic API key saved.'))
-        console.log('')
-
-        // Future providers:
-        // console.log(chalk.dim('  To use OpenAI: releasehub ai add-key --provider openai'))
-        // console.log(chalk.dim('  To use Gemini: releasehub ai add-key --provider gemini'))
+        await addKeyForProvider(provider)
       } catch (err) {
         handleError(err)
       }
     })
 
+  // ── switch ────────────────────────────────────────────────────────────────
+  ai
+    .command('switch')
+    .description('Switch active AI provider')
+    .action(async () => {
+      try {
+        const current = getActiveProvider()
+        console.log('')
+        console.log(chalk.dim(`  Current provider: ${AI_PROVIDER_LABELS[current]}`))
+
+        const idx = await promptSelect(
+          'Switch to which provider?',
+          AI_PROVIDERS.map(p => {
+            const hasKey = !!getKeyForProvider(p)
+            const active = p === current ? chalk.dim(' (current)') : ''
+            const missing = !hasKey ? chalk.red(' (no key)') : ''
+            return `${AI_PROVIDER_LABELS[p]}${active}${missing}`
+          }),
+        )
+
+        const provider = AI_PROVIDERS[idx]
+        if (!provider) { console.log(chalk.red('  ✖ Invalid selection.')); process.exit(1) }
+        if (provider === current) { console.log(chalk.yellow(`  Already using ${AI_PROVIDER_LABELS[provider]}.`)); return }
+
+        if (!getKeyForProvider(provider)) {
+          console.log(chalk.yellow(`  No key saved for ${AI_PROVIDER_LABELS[provider]}.`))
+          const answer = await prompt(chalk.bold('  Add key now? (y/n): '))
+          if (answer.toLowerCase() === 'y') { await addKeyForProvider(provider); return }
+          console.log(chalk.dim('  Cancelled.')); return
+        }
+
+        updateConfig({ ai_provider: provider })
+        console.log(chalk.green(`✔ Switched to ${AI_PROVIDER_LABELS[provider]}.`))
+        console.log('')
+      } catch (err) {
+        handleError(err)
+      }
+    })
+
+  // ── remove-key ────────────────────────────────────────────────────────────
   ai
     .command('remove-key')
-    .description('Remove saved AI key')
-    .action(() => {
+    .description('Remove a saved AI key')
+    .action(async () => {
       try {
         const config = readConfig()
-        if (!config.anthropic_key) {
-          console.log(chalk.yellow('No AI key found.'))
-          return
+        const available = AI_PROVIDERS.filter(p => !!getKeyForProvider(p))
+        if (available.length === 0) { console.log(chalk.yellow('No AI keys saved.')); return }
+
+        const idx = await promptSelect(
+          'Remove key for which provider?',
+          available.map(p => AI_PROVIDER_LABELS[p]),
+        )
+        const provider = available[idx]
+        if (!provider) { console.log(chalk.red('  ✖ Invalid selection.')); process.exit(1) }
+
+        const configKey = provider === 'anthropic' ? 'anthropic_key' : 'openai_key'
+        delete config[configKey]
+        if (config.ai_provider === provider) {
+          const other = AI_PROVIDERS.find(p => p !== provider && !!getKeyForProvider(p))
+          config.ai_provider = other
         }
-        delete config.anthropic_key
-        delete config.ai_provider
         writeConfig(config)
-        console.log(chalk.green('✔ AI key removed.'))
+        console.log(chalk.green(`✔ ${AI_PROVIDER_LABELS[provider]} key removed.`))
+        console.log('')
       } catch (err) {
         handleError(err)
       }
     })
 
+  // ── status ────────────────────────────────────────────────────────────────
   ai
     .command('status')
-    .description('Check if an AI key is saved and valid')
+    .description('Show active provider and validate saved keys')
     .action(async () => {
       try {
         console.log('')
-        const key = getAnthropicKey()
+        const active = getActiveProvider()
+        console.log(chalk.bold('  AI provider status'))
+        console.log('')
 
-        if (!key) {
-          console.log(chalk.yellow('  No AI key found.'))
-          console.log(chalk.dim('  Run: releasehub ai add-key'))
-          console.log('')
-          return
+        for (const provider of AI_PROVIDERS) {
+          const key = getKeyForProvider(provider)
+          const isActive = provider === active
+          const activeTag = isActive ? chalk.bgBlue.white(' active ') + ' ' : '         '
+
+          if (key) {
+            const spinner = ora({ text: `Checking ${AI_PROVIDER_LABELS[provider]}...` }).start()
+            const valid = await validateKey(provider, key)
+            const source = (
+              (provider === 'anthropic' && process.env['RELEASEHUB_ANTHROPIC_KEY']) ||
+              (provider === 'openai' && process.env['RELEASEHUB_OPENAI_KEY'])
+            ) ? 'env var' : 'config'
+
+            if (valid) {
+              spinner.succeed(`${activeTag}${chalk.green(AI_PROVIDER_LABELS[provider])} — valid ${chalk.dim(`(${source}, ${key.slice(0, 10)}...)`)}`)
+            } else {
+              spinner.fail(`${activeTag}${chalk.red(AI_PROVIDER_LABELS[provider])} — invalid or expired`)
+            }
+          } else {
+            console.log(`  ${activeTag}${chalk.dim(AI_PROVIDER_LABELS[provider])} — ${chalk.yellow('no key saved')}`)
+          }
         }
 
-        const source = process.env['RELEASEHUB_ANTHROPIC_KEY']
-          ? 'env var (RELEASEHUB_ANTHROPIC_KEY)'
-          : '~/.releasehub/config.json'
-
-        const spinner = ora('Validating key...').start()
-        const valid = await validateAnthropicKey(key)
-
-        if (valid) {
-          spinner.succeed(chalk.green(`AI key is valid`))
-          console.log(chalk.dim(`  Provider : anthropic`))
-          console.log(chalk.dim(`  Source   : ${source}`))
-          console.log(chalk.dim(`  Key      : ${key.slice(0, 12)}...`))
-        } else {
-          spinner.fail(chalk.red('AI key is invalid or expired.'))
-          console.log(chalk.dim('  Run: releasehub ai add-key'))
-        }
+        console.log('')
+        console.log(chalk.dim('  releasehub ai add-key   — add a key'))
+        console.log(chalk.dim('  releasehub ai switch    — switch provider'))
         console.log('')
       } catch (err) {
         handleError(err)
