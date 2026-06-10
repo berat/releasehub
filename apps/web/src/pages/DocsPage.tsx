@@ -125,15 +125,28 @@ export function DocsPage() {
             <p>ReleaseHub supports Anthropic (Claude) and OpenAI (GPT-4o). Run the command and select your provider interactively:</p>
             <CodeBlock>{'releasehub ai add-key'}</CodeBlock>
             <p>You'll be shown a numbered list — pick your provider, then paste your API key. It's validated immediately and saved to <code className="inline">~/.releasehub/config.json</code> with <code className="inline">chmod 600</code> permissions. It is never sent to ReleaseHub servers.</p>
-            <ul>
-              <li>Anthropic key: <a className="ln" href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a></li>
-              <li>OpenAI key: <a className="ln" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">platform.openai.com/api-keys</a></li>
-            </ul>
+
+            <h3>Getting an Anthropic key</h3>
+            <ol>
+              <li>Go to <a className="ln" href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a> and sign up or log in.</li>
+              <li>Open <strong>API Keys</strong> from the left sidebar.</li>
+              <li>Click <strong>Create Key</strong>, give it a name (e.g. <em>releasehub</em>), and copy the key.</li>
+              <li>Paste it when prompted by <code className="inline">releasehub ai add-key</code>.</li>
+            </ol>
+            <Callout>New Anthropic accounts receive free credits. After that, usage is pay-as-you-go — roughly <strong>$0.003 per release analysis</strong> (20 PRs).</Callout>
+
+            <h3>Getting an OpenAI key</h3>
+            <ol>
+              <li>Go to <a className="ln" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">platform.openai.com/api-keys</a> and sign up or log in.</li>
+              <li>Click <strong>Create new secret key</strong>, give it a name, and copy the key.</li>
+              <li>Make sure your account has a <a className="ln" href="https://platform.openai.com/settings/organization/billing" target="_blank" rel="noopener noreferrer">billing method</a> added — GPT-4o requires a funded account.</li>
+              <li>Paste it when prompted by <code className="inline">releasehub ai add-key</code>.</li>
+            </ol>
+
             <p>To switch providers later:</p>
             <CodeBlock>{'releasehub ai switch'}</CodeBlock>
             <p>To check the status of all saved keys:</p>
             <CodeBlock>{'releasehub ai status'}</CodeBlock>
-            <p>Average cost: <strong>~$0.003 per analysis</strong> (20 PRs). Costs go directly to your AI provider account.</p>
 
             {/* ── USAGE ── */}
             <h2 id="generate">Generate</h2>
