@@ -29,9 +29,9 @@ export function WaitlistForm({ labelText = 'Join the waitlist', buttonText = 'Jo
           type="button"
           className="btn btn-acc wl-btn"
           onClick={submit}
-          disabled={status === 'success'}
+          disabled={status === 'success' || status === 'loading'}
         >
-          {status === 'success' ? 'Added' : buttonText}
+          {status === 'loading' ? 'Joining...' : status === 'success' ? 'Added' : buttonText}
         </button>
       </div>
       {message && (
