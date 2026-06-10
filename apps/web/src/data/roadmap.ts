@@ -19,6 +19,8 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Shipped',
     color: 'var(--success)',
     cards: [
+      { title: 'Waitlist & analytics', description: 'Plunk waitlist integration, Umami + Google Analytics added to the website.', tag: 'Website' },
+      { title: 'README & docs', description: 'Full README with installation, usage examples, GitHub Actions workflow. /docs page synced with CLI.', tag: 'Launch' },
       { title: 'Output generation', description: 'Generate github-release, changelog, and slack formats. stdout, --output file, --publish to GitHub Release API.', tag: 'CLI' },
       { title: 'CLI UX polish', description: 'Onboarding flow with next-step hints, improved --help across all commands, actionable error messages.', tag: 'CLI' },
       { title: 'AI analysis — multi-provider', description: 'Classify and rewrite PRs using Anthropic (Claude) or OpenAI (GPT-4o). 20-PR batching for large releases.', tag: 'CLI' },
@@ -35,7 +37,7 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Now',
     color: 'var(--acc)',
     cards: [
-      { title: 'README & docs update', description: 'Full README with installation, usage examples, GitHub Actions workflow, and npm badge.', tag: 'Launch' },
+      { title: 'npm publish — v1.0.0', description: 'Publish @releasehub/cli to npm and make the GitHub repository public under MIT license.', tag: 'Launch' },
     ],
   },
   {
@@ -43,8 +45,9 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Next',
     color: 'var(--improve)',
     cards: [
-      { title: 'npm publish & launch', description: 'Publish @releasehub/cli to npm. Hacker News Show HN, Product Hunt, and X announcement.', tag: 'Launch' },
+      { title: 'Launch announcements', description: 'Hacker News Show HN, Product Hunt launch, and X / Bluesky announcement post.', tag: 'Launch' },
       { title: 'Gemini support', description: 'Add Google Gemini as a third AI provider option.', tag: 'CLI' },
+      { title: 'Issue templates', description: 'GitHub issue templates for bug reports and feature requests.', tag: 'Launch' },
     ],
   },
   {
