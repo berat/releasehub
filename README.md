@@ -167,14 +167,6 @@ releasehub/
 
 ---
 
-## License
-
-MIT — see [LICENSE](LICENSE).
-
----
-
----
-
 ## Support
 
 If ReleaseHub saves you time, consider buying me a coffee:
@@ -183,4 +175,10 @@ If ReleaseHub saves you time, consider buying me a coffee:
 
 ---
 
-Built by [@berat](https://github.com/berat) · [berat.app/releasehub](https://berat.app/releasehub)
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+Built by [@berat](https://twitter.com/beratbuilds)
