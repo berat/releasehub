@@ -68,6 +68,8 @@ ${chalk.bold('Examples:')}
 
         if (prs.length === 0) {
           prSpinner.warn(chalk.yellow('No merged pull requests found in this range.'))
+          log(chalk.dim('  Make sure the tags exist and there are merged PRs between them.'))
+          log(chalk.dim(`  Try: git tag --list to see available tags.`))
           log('')
           process.exit(0)
         }
@@ -80,6 +82,15 @@ ${chalk.bold('Examples:')}
         const visible = changes.filter(c => c.visible)
         const hidden = changes.filter(c => !c.visible)
         aiSpinner.succeed(`Analyzed — ${chalk.bold(visible.length)} user-facing, ${chalk.dim(`${hidden.length} hidden`)}`)
+
+        if (visible.length === 0) {
+          log('')
+          log(chalk.yellow('  No user-facing changes found.'))
+          log(chalk.dim('  All pull requests were classified as internal (refactors, CI, dependencies).'))
+          log(chalk.dim('  Nothing to publish for this release range.'))
+          log('')
+          process.exit(0)
+        }
 
         // 5. Format output
         const output = formatOutput(options.format, { version: options.to, changes })
