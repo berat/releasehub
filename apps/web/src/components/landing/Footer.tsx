@@ -75,6 +75,9 @@ export function Footer() {
         </div>
         <div className="foot-bottom">
           <span>© 2026 ReleaseHub · MIT licensed</span>
+          <a href="https://www.buymeacoffee.com/beratbozkurt0" target="_blank" rel="noopener noreferrer" className="foot-sponsor">
+            <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" />
+          </a>
           <CopyCommand className="footer-copy" />
         </div>
       </div>

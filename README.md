@@ -168,4 +168,14 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
+---
+
+## Support
+
+If ReleaseHub saves you time, consider buying me a coffee:
+
+<a href="https://www.buymeacoffee.com/beratbozkurt0" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+---
+
 Built by [@berat](https://github.com/berat) · [berat.app/releasehub](https://berat.app/releasehub)

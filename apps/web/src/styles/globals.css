@@ -636,7 +636,8 @@ footer{ border-top:1px solid var(--line); padding:56px 0 48px; position:relative
 .foot-col h5{ font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:14px; }
 .foot-col a{ display:block; color:var(--ink-2); font-size:14px; padding:5px 0; transition:.15s; }
 .foot-col a:hover{ color:var(--acc); }
-.foot-bottom{ margin-top:48px; padding-top:24px; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; color:var(--ink-faint); font-size:13px; font-family:var(--mono); }
+.foot-bottom{ margin-top:48px; padding-top:24px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; color:var(--ink-faint); font-size:13px; font-family:var(--mono); }
+.foot-sponsor img{ height:40px; width:auto; display:block; }
 
 /* ============================================================ MOBILE FIXES */
 @media (max-width:600px){
