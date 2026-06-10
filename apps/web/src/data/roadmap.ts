@@ -19,6 +19,7 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Shipped',
     color: 'var(--success)',
     cards: [
+      { title: 'npm publish — v1.0.0', description: 'Published @releasehub/cli to npm. Open source under MIT license on GitHub.', tag: 'Launch' },
       { title: 'Waitlist & analytics', description: 'Plunk waitlist integration, Umami + Google Analytics added to the website.', tag: 'Website' },
       { title: 'README & docs', description: 'Full README with installation, usage examples, GitHub Actions workflow. /docs page synced with CLI.', tag: 'Launch' },
       { title: 'Output generation', description: 'Generate github-release, changelog, and slack formats. stdout, --output file, --publish to GitHub Release API.', tag: 'CLI' },
@@ -37,7 +38,7 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Now',
     color: 'var(--acc)',
     cards: [
-      { title: 'npm publish — v1.0.0', description: 'Publish @releasehub/cli to npm and make the GitHub repository public under MIT license.', tag: 'Launch' },
+      { title: 'Launch announcements', description: 'Hacker News Show HN, Product Hunt launch, and X / Bluesky announcement post.', tag: 'Launch' },
     ],
   },
   {
@@ -45,7 +46,6 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Next',
     color: 'var(--improve)',
     cards: [
-      { title: 'Launch announcements', description: 'Hacker News Show HN, Product Hunt launch, and X / Bluesky announcement post.', tag: 'Launch' },
       { title: 'Gemini support', description: 'Add Google Gemini as a third AI provider option.', tag: 'CLI' },
       { title: 'Issue templates', description: 'GitHub issue templates for bug reports and feature requests.', tag: 'Launch' },
     ],
