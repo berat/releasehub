@@ -1,5 +1,10 @@
 # ReleaseHub
 
+[![npm version](https://img.shields.io/npm/v/@releasehub/cli.svg)](https://www.npmjs.com/package/@releasehub/cli)
+[![npm downloads](https://img.shields.io/npm/dm/@releasehub/cli.svg)](https://www.npmjs.com/package/@releasehub/cli)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js 18+](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
+
 > AI-powered release notes from your terminal.
 
 ReleaseHub reads your merged pull requests, filters the noise, rewrites technical titles into plain language, and outputs GitHub release notes, a changelog entry, or a Slack message — in one command.
