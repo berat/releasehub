@@ -153,7 +153,7 @@ export function DocsPage() {
             <p>Point the CLI at a tag range:</p>
             <CodeBlock>{'releasehub generate --from v2.3.0 --to v2.4.0'}</CodeBlock>
             <p>By default the repo is inferred from the current directory's git remote. Specify it explicitly if needed:</p>
-            <CodeBlock>{'releasehub generate --repo acme/backend --from v2.3.0 --to v2.4.0'}</CodeBlock>
+            <CodeBlock>{'releasehub generate --repo username/repo --from v2.3.0 --to v2.4.0'}</CodeBlock>
             <p>Write to a file instead of printing to stdout:</p>
             <CodeBlock>{'releasehub generate --from v2.3.0 --to v2.4.0 --output RELEASE.md'}</CodeBlock>
             <p>Publish directly as a GitHub Release:</p>
@@ -228,12 +228,14 @@ _+ 4 more updates_`}</pre>
 
             {/* ── AUTOMATION ── */}
             <h2 id="github-actions">GitHub Actions</h2>
-            <p>Add two secrets to your repo under <strong>Settings → Secrets → Actions</strong>:</p>
+            <p>Add the following secrets to your repo under <strong>Settings → Secrets → Actions</strong>:</p>
             <ul>
               <li><code className="inline">RELEASEHUB_GITHUB_TOKEN</code> — run <code className="inline">releasehub auth login</code> locally, then copy the token from <code className="inline">~/.releasehub/config.json</code></li>
-              <li><code className="inline">RELEASEHUB_ANTHROPIC_KEY</code> — your Anthropic API key</li>
+              <li><code className="inline">RELEASEHUB_ANTHROPIC_KEY</code> — your Anthropic API key (if using Anthropic)</li>
+              <li><code className="inline">RELEASEHUB_OPENAI_KEY</code> — your OpenAI API key (if using OpenAI)</li>
             </ul>
-            <p>Then add this workflow:</p>
+            <p>Then add this workflow. Pick the AI provider that matches your setup:</p>
+            <h3>Using Anthropic (Claude)</h3>
             <CodeBlock>
               {'# .github/workflows/release.yml\n'}
               {'name: Release\n\n'}
@@ -256,6 +258,45 @@ _+ 4 more updates_`}</pre>
               {'        env:\n'}
               {'          RELEASEHUB_GITHUB_TOKEN: ${{ secrets.RELEASEHUB_GITHUB_TOKEN }}\n'}
               {'          RELEASEHUB_ANTHROPIC_KEY: ${{ secrets.RELEASEHUB_ANTHROPIC_KEY }}\n'}
+              {'        run: |\n'}
+              {'          npx @releasehub/cli generate \\\n'}
+              {'            --from ${{ steps.prev_tag.outputs.tag }} \\\n'}
+              {'            --to ${{ github.ref_name }} \\\n'}
+              {'            --format github-release \\\n'}
+              {'            --output release-notes.md \\\n'}
+              {'            --quiet\n\n'}
+              {'      - name: Create GitHub Release\n'}
+              {'        run: |\n'}
+              {'          gh release create ${{ github.ref_name }} \\\n'}
+              {'            --title "${{ github.ref_name }}" \\\n'}
+              {'            --notes-file release-notes.md\n'}
+              {'        env:\n'}
+              {'          GH_TOKEN: ${{ github.token }}'}
+            </CodeBlock>
+            <h3>Using OpenAI (GPT-4o)</h3>
+            <CodeBlock>
+              {'# .github/workflows/release.yml\n'}
+              {'name: Release\n\n'}
+              {'on:\n'}
+              {'  push:\n'}
+              {"    tags: ['v*']\n\n"}
+              {'jobs:\n'}
+              {'  release:\n'}
+              {'    runs-on: ubuntu-latest\n'}
+              {'    steps:\n'}
+              {'      - uses: actions/checkout@v4\n'}
+              {'        with:\n'}
+              {'          fetch-depth: 0\n\n'}
+              {'      - name: Get previous tag\n'}
+              {'        id: prev_tag\n'}
+              {'        run: |\n'}
+              {"          PREV=$(git tag --sort=-version:refname | sed -n '2p')\n"}
+              {'          echo "tag=$PREV" >> $GITHUB_OUTPUT\n\n'}
+              {'      - name: Generate release notes\n'}
+              {'        env:\n'}
+              {'          RELEASEHUB_GITHUB_TOKEN: ${{ secrets.RELEASEHUB_GITHUB_TOKEN }}\n'}
+              {'          RELEASEHUB_OPENAI_KEY: ${{ secrets.RELEASEHUB_OPENAI_KEY }}\n'}
+              {'          RELEASEHUB_AI_PROVIDER: openai\n'}
               {'        run: |\n'}
               {'          npx @releasehub/cli generate \\\n'}
               {'            --from ${{ steps.prev_tag.outputs.tag }} \\\n'}

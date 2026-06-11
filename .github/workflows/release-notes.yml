@@ -1,0 +1,33 @@
+name: Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install -g @releasehub/cli
+
+      - name: Generate release notes
+        run: |
+          releasehub generate \
+            --from $(git describe --abbrev=0 --tags HEAD~1) \
+            --to ${{ github.ref_name }} \
+            --format github-release \
+            --publish \
+            --quiet
+        env:
+          RELEASEHUB_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASEHUB_OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          RELEASEHUB_AI_PROVIDER: openai

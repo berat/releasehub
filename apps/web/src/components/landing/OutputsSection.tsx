@@ -24,17 +24,17 @@ export function OutputsSection() {
         <Reveal>
           <div className="out-layout">
             <div className="aud-list" role="tablist" aria-label="Output formats">
-              {OUTPUT_FORMATS.map(({ key, label, audience, icon }) => (
+              {OUTPUT_FORMATS.map(({ key, label, audience, icon, soon }) => (
                 <button
                   key={key}
-                  className={`aud${activeKey === key ? ' active' : ''}`}
+                  className={`aud${activeKey === key ? ' active' : ''}${soon ? ' soon' : ''}`}
                   role="tab"
                   aria-selected={activeKey === key}
                   onClick={() => setActiveKey(key)}
                 >
                   <span className="ai">{icon}</span>
                   <span className="meta">
-                    <b>{label}</b>
+                    <b>{label}{soon && <span className="soon-badge">Soon</span>}</b>
                     <small>{audience}</small>
                   </span>
                 </button>
@@ -49,7 +49,12 @@ export function OutputsSection() {
                 </span>
               </div>
               <div key={activeKey} className="out-body show">
-                {active.content}
+                {active.soon ? (
+                  <div className="soon-placeholder">
+                    <span className="soon-badge-lg">Coming Soon</span>
+                    <p>This output format is on the roadmap and will be available in a future release.</p>
+                  </div>
+                ) : active.content}
               </div>
             </div>
           </div>
