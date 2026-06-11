@@ -153,7 +153,7 @@ export function DocsPage() {
             <p>Point the CLI at a tag range:</p>
             <CodeBlock>{'releasehub generate --from v2.3.0 --to v2.4.0'}</CodeBlock>
             <p>By default the repo is inferred from the current directory's git remote. Specify it explicitly if needed:</p>
-            <CodeBlock>{'releasehub generate --repo acme/backend --from v2.3.0 --to v2.4.0'}</CodeBlock>
+            <CodeBlock>{'releasehub generate --repo username/repo --from v2.3.0 --to v2.4.0'}</CodeBlock>
             <p>Write to a file instead of printing to stdout:</p>
             <CodeBlock>{'releasehub generate --from v2.3.0 --to v2.4.0 --output RELEASE.md'}</CodeBlock>
             <p>Publish directly as a GitHub Release:</p>
