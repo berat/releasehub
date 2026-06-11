@@ -69,6 +69,8 @@ export function getOpenAIKey(): string | undefined {
 }
 
 export function getActiveProvider(): AIProvider {
+  const envProvider = process.env['RELEASEHUB_AI_PROVIDER']
+  if (envProvider === 'openai' || envProvider === 'anthropic') return envProvider
   return readConfig().ai_provider ?? 'anthropic'
 }
 
