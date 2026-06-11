@@ -119,6 +119,7 @@ export const OUTPUT_FORMATS: OutputFormat[] = [
   },
   {
     key: 'email',
+    soon: true,
     label: 'Customer email',
     audience: 'your users',
     copyLabel: 'email.html',
