@@ -1,6 +1,6 @@
 {
   "name": "@releasehub/cli",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "AI-powered release notes from your terminal",
   "type": "module",
   "bin": {
