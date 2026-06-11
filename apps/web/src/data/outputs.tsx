@@ -9,6 +9,7 @@ export interface OutputFormat {
   copyLabel: string
   icon: ReactNode
   content: ReactNode
+  soon?: boolean
 }
 
 const ChangelogIcon = () => (
@@ -139,6 +140,7 @@ export const OUTPUT_FORMATS: OutputFormat[] = [
   },
   {
     key: 'founder',
+    soon: true,
     label: 'Founder brief',
     audience: 'business impact',
     copyLabel: 'founder-brief',
@@ -156,6 +158,7 @@ export const OUTPUT_FORMATS: OutputFormat[] = [
   },
   {
     key: 'weekly',
+    soon: true,
     label: 'Weekly recap',
     audience: 'internal',
     copyLabel: 'weekly-recap',
