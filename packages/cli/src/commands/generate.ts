@@ -17,6 +17,7 @@ export interface GenerateOptions {
   output?: string
   publish?: boolean
   quiet?: boolean
+  dryRun?: boolean
 }
 
 export function registerGenerateCommand(program: Command): void {
@@ -43,6 +44,7 @@ ${chalk.bold('Examples:')}
     .option('--output <file>', 'Write output to a file instead of printing to stdout')
     .option('--publish', 'Publish directly as a GitHub Release via the API')
     .option('--quiet', 'Suppress progress output — prints only the final result (useful in CI)')
+    .option('--dry-run', 'Fetch PRs and show what would be analyzed — no AI call, no output written')
     .action(async (options: GenerateOptions) => {
       try {
         const log = (msg: string) => { if (!options.quiet) process.stderr.write(msg + '\n') }
@@ -57,8 +59,8 @@ ${chalk.bold('Examples:')}
         log(chalk.dim(`  provider : ${AI_PROVIDER_LABELS[getActiveProvider()]}`))
         log('')
 
-        // 2. Check AI key
-        if (!getActiveAIKey()) {
+        // 2. Check AI key (skip in dry-run)
+        if (!options.dryRun && !getActiveAIKey()) {
           throw new AuthError('No AI key found. Run: releasehub ai add-key')
         }
 
@@ -76,7 +78,24 @@ ${chalk.bold('Examples:')}
 
         prSpinner.succeed(`Fetched ${chalk.bold(prs.length)} pull requests`)
 
-        // 4. AI analysis
+        // 4. Dry run — show PR list, skip AI
+        if (options.dryRun) {
+          log('')
+          log(chalk.bold('  Dry run — no AI call will be made'))
+          log('')
+          prs.forEach((pr, i) => {
+            const labels = pr.labels?.join(', ')
+            const labelStr = labels ? chalk.dim(` [${labels}]`) : ''
+            log(`  ${chalk.dim(`${i + 1}.`)} ${pr.title}${labelStr}`)
+          })
+          log('')
+          log(chalk.dim(`  ${prs.length} PRs would be sent to ${AI_PROVIDER_LABELS[getActiveProvider()]} for analysis.`))
+          log(chalk.dim('  Remove --dry-run to generate release notes.'))
+          log('')
+          process.exit(0)
+        }
+
+        // 5. AI analysis
         const aiSpinner = ora({ text: 'Analyzing with AI...', isSilent: options.quiet }).start()
         const { changes } = await analyzePullRequests(prs)
         const visible = changes.filter(c => c.visible)
@@ -92,10 +111,10 @@ ${chalk.bold('Examples:')}
           process.exit(0)
         }
 
-        // 5. Format output
+        // 6. Format output
         const output = formatOutput(options.format, { version: options.to, changes })
 
-        // 6. Write or print
+        // 7. Write or print
         if (options.output) {
           writeFileSync(options.output, output, 'utf8')
           log('')
@@ -106,7 +125,7 @@ ${chalk.bold('Examples:')}
           process.stdout.write(output)
         }
 
-        // 7. Publish as GitHub Release
+        // 8. Publish as GitHub Release
         if (options.publish) {
           const publishSpinner = ora({ text: 'Publishing GitHub Release...', isSilent: options.quiet }).start()
 
