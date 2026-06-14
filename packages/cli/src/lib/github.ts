@@ -23,7 +23,8 @@ export interface Tag {
 function getOctokit(): Octokit {
   const token = getGitHubToken()
   if (!token) throw new AuthError('No GitHub token found. Run: releasehub auth login')
-  return new Octokit({ auth: token, request: { fetch } })
+  const fetchImpl = typeof fetch !== 'undefined' ? fetch : undefined
+  return new Octokit({ auth: token, ...(fetchImpl ? { request: { fetch: fetchImpl } } : {}) })
 }
 
 /**
