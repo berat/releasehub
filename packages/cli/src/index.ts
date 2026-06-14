@@ -5,6 +5,7 @@ import { createRequire } from 'module'
 import { registerAuthCommands } from './commands/auth.js'
 import { registerAICommands } from './commands/ai.js'
 import { registerGenerateCommand } from './commands/generate.js'
+import { registerConfigCommand } from './commands/config.js'
 
 const require = createRequire(import.meta.url)
 const { version } = require('../package.json') as { version: string }
@@ -33,5 +34,6 @@ ${chalk.dim('Docs: https://berat.app/releasehub/docs')}
 registerAuthCommands(program)
 registerAICommands(program)
 registerGenerateCommand(program)
+registerConfigCommand(program)
 
 program.parse()
