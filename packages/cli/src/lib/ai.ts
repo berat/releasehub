@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getActiveProvider, getActiveAIKey } from './config.js'
 import { AuthError, ApiError } from './errors.js'
 import type { PullRequest } from './github.js'
@@ -86,6 +87,7 @@ function parseResponse(raw: string): AnalyzedChange[] {
 
 const ANTHROPIC_MODEL = 'claude-sonnet-4-5'
 const OPENAI_MODEL = 'gpt-4o'
+const GEMINI_MODEL = 'gemini-1.5-flash'
 const BATCH_SIZE = 20
 
 async function analyzeWithAnthropic(prs: PullRequest[]): Promise<AnalyzedChange[]> {
@@ -135,6 +137,28 @@ async function analyzeWithOpenAI(prs: PullRequest[]): Promise<AnalyzedChange[]> 
   return results
 }
 
+async function analyzeWithGemini(prs: PullRequest[]): Promise<AnalyzedChange[]> {
+  const key = getActiveAIKey()
+  if (!key) throw new AuthError('No Gemini key found. Run: releasehub ai add-key')
+
+  const client = new GoogleGenerativeAI(key)
+  const model = client.getGenerativeModel({
+    model: GEMINI_MODEL,
+    systemInstruction: SYSTEM_PROMPT,
+  })
+  const results: AnalyzedChange[] = []
+
+  for (let i = 0; i < prs.length; i += BATCH_SIZE) {
+    const batch = prs.slice(i, i + BATCH_SIZE)
+    const result = await model.generateContent(buildUserPrompt(batch))
+    const content = result.response.text()
+    if (!content) throw new ApiError('Unexpected response from Gemini API')
+    results.push(...parseResponse(content))
+  }
+
+  return results
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function analyzePullRequests(prs: PullRequest[]): Promise<AnalysisResult> {
@@ -144,6 +168,7 @@ export async function analyzePullRequests(prs: PullRequest[]): Promise<AnalysisR
   switch (provider) {
     case 'anthropic': changes = await analyzeWithAnthropic(prs); break
     case 'openai':    changes = await analyzeWithOpenAI(prs); break
+    case 'gemini':    changes = await analyzeWithGemini(prs); break
     default: throw new ApiError(`Unsupported AI provider: ${provider}`)
   }
 

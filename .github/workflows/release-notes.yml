@@ -8,26 +8,43 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # required to create GitHub Releases
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # full history needed to find previous tag
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: lts/*
 
-      - run: npm install -g @releasehub/cli
+      - name: Install releasehub
+        run: npm install -g @releasehub/cli
 
-      - name: Generate release notes
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          PREV=$(git tag --sort=-version:refname | grep -E '^v[0-9]' | sed -n '2p')
+          if [ -z "$PREV" ]; then
+            echo "No previous tag found — skipping release notes generation"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag=$PREV" >> $GITHUB_OUTPUT
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate and publish release notes
+        if: steps.prev_tag.outputs.skip != 'true'
         run: |
           releasehub generate \
-            --from $(git describe --abbrev=0 --tags HEAD~1) \
+            --from ${{ steps.prev_tag.outputs.tag }} \
             --to ${{ github.ref_name }} \
             --format github-release \
             --publish \
             --quiet
         env:
           RELEASEHUB_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASEHUB_OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-          RELEASEHUB_AI_PROVIDER: openai
+          RELEASEHUB_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_KEY }}
+          RELEASEHUB_AI_PROVIDER: anthropic

@@ -6,18 +6,20 @@ import { ConfigError } from './errors.js'
 const CONFIG_DIR = join(homedir(), '.releasehub')
 const CONFIG_PATH = join(CONFIG_DIR, 'config.json')
 
-export type AIProvider = 'anthropic' | 'openai'
+export type AIProvider = 'anthropic' | 'openai' | 'gemini'
 
-export const AI_PROVIDERS: AIProvider[] = ['anthropic', 'openai']
+export const AI_PROVIDERS: AIProvider[] = ['anthropic', 'openai', 'gemini']
 
 export const AI_PROVIDER_LABELS: Record<AIProvider, string> = {
   anthropic: 'Anthropic (Claude)',
   openai: 'OpenAI (GPT-4o)',
+  gemini: 'Google (Gemini 1.5 Flash)',
 }
 
 export const AI_PROVIDER_KEY_URLS: Record<AIProvider, string> = {
   anthropic: 'https://console.anthropic.com',
   openai: 'https://platform.openai.com/api-keys',
+  gemini: 'https://aistudio.google.com/app/apikey',
 }
 
 export interface Config {
@@ -25,6 +27,7 @@ export interface Config {
   ai_provider?: AIProvider
   anthropic_key?: string
   openai_key?: string
+  gemini_key?: string
   default_format?: 'github-release' | 'changelog' | 'slack'
 }
 
@@ -68,9 +71,13 @@ export function getOpenAIKey(): string | undefined {
   return process.env['RELEASEHUB_OPENAI_KEY'] ?? readConfig().openai_key
 }
 
+export function getGeminiKey(): string | undefined {
+  return process.env['RELEASEHUB_GEMINI_KEY'] ?? readConfig().gemini_key
+}
+
 export function getActiveProvider(): AIProvider {
   const envProvider = process.env['RELEASEHUB_AI_PROVIDER']
-  if (envProvider === 'openai' || envProvider === 'anthropic') return envProvider
+  if (envProvider === 'openai' || envProvider === 'anthropic' || envProvider === 'gemini') return envProvider
   return readConfig().ai_provider ?? 'anthropic'
 }
 
@@ -79,6 +86,7 @@ export function getActiveAIKey(): string | undefined {
   switch (provider) {
     case 'anthropic': return getAnthropicKey()
     case 'openai':    return getOpenAIKey()
+    case 'gemini':    return getGeminiKey()
   }
 }
 
@@ -86,5 +94,6 @@ export function getKeyForProvider(provider: AIProvider): string | undefined {
   switch (provider) {
     case 'anthropic': return getAnthropicKey()
     case 'openai':    return getOpenAIKey()
+    case 'gemini':    return getGeminiKey()
   }
 }

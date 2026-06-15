@@ -50,6 +50,12 @@ async function validateKey(provider: AIProvider, key: string): Promise<boolean> 
       })
       return res.ok
     }
+    if (provider === 'gemini') {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`,
+      )
+      return res.ok
+    }
     return false
   } catch {
     return false
@@ -75,7 +81,7 @@ async function addKeyForProvider(provider: AIProvider): Promise<void> {
     process.exit(1)
   }
 
-  const configKey = provider === 'anthropic' ? 'anthropic_key' : 'openai_key'
+  const configKey = provider === 'anthropic' ? 'anthropic_key' : provider === 'openai' ? 'openai_key' : 'gemini_key'
   updateConfig({ [configKey]: key, ai_provider: provider })
   spinner.succeed(`${AI_PROVIDER_LABELS[provider]} key saved and set as active provider.`)
   console.log('')
@@ -174,7 +180,7 @@ ${chalk.bold('Commands:')}
         const provider = available[idx]
         if (!provider) { console.log(chalk.red('  ✖ Invalid selection.')); process.exit(1) }
 
-        const configKey = provider === 'anthropic' ? 'anthropic_key' : 'openai_key'
+        const configKey = provider === 'anthropic' ? 'anthropic_key' : provider === 'openai' ? 'openai_key' : 'gemini_key'
         delete config[configKey]
         if (config.ai_provider === provider) {
           const other = AI_PROVIDERS.find(p => p !== provider && !!getKeyForProvider(p))
@@ -209,7 +215,8 @@ ${chalk.bold('Commands:')}
             const valid = await validateKey(provider, key)
             const source = (
               (provider === 'anthropic' && process.env['RELEASEHUB_ANTHROPIC_KEY']) ||
-              (provider === 'openai' && process.env['RELEASEHUB_OPENAI_KEY'])
+              (provider === 'openai' && process.env['RELEASEHUB_OPENAI_KEY']) ||
+              (provider === 'gemini' && process.env['RELEASEHUB_GEMINI_KEY'])
             ) ? 'env var' : 'config'
 
             if (valid) {

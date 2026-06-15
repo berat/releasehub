@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 // parseResponse is not exported — test it indirectly via the output shape
 // We test the logic that surrounds AI calls: prompt building and response parsing
@@ -107,5 +107,59 @@ describe('parseResponse', () => {
 
   it('throws on invalid JSON', () => {
     expect(() => parseResponse('not json')).toThrow()
+  })
+})
+
+// ─── Gemini provider mock ──────────────────────────────────────────────────────
+
+vi.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
+    getGenerativeModel: vi.fn().mockReturnValue({
+      generateContent: vi.fn().mockResolvedValue({
+        response: {
+          text: () => JSON.stringify([
+            {
+              original_title: 'Add search',
+              rewritten_title: 'You can now search across all items',
+              category: 'feature',
+              visible: true,
+              confidence: 0.95,
+              reasoning: 'New user-facing capability',
+            },
+          ]),
+        },
+      }),
+    }),
+  })),
+}))
+
+vi.mock('../lib/config.js', () => ({
+  getActiveProvider: vi.fn(() => 'gemini'),
+  getActiveAIKey: vi.fn(() => 'AIza-test-key'),
+}))
+
+describe('analyzeWithGemini (via analyzePullRequests)', () => {
+  it('calls GoogleGenerativeAI with the active key', async () => {
+    const { GoogleGenerativeAI } = await import('@google/generative-ai')
+    const { analyzePullRequests } = await import('../lib/ai.js')
+
+    await analyzePullRequests([
+      { number: 1, title: 'Add search', body: null, labels: [], author: 'alice', merged_at: '', url: '', linked_issues: [] },
+    ])
+
+    expect(GoogleGenerativeAI).toHaveBeenCalledWith('AIza-test-key')
+  })
+
+  it('returns parsed AnalyzedChange from Gemini response', async () => {
+    const { analyzePullRequests } = await import('../lib/ai.js')
+
+    const result = await analyzePullRequests([
+      { number: 1, title: 'Add search', body: null, labels: [], author: 'alice', merged_at: '', url: '', linked_issues: [] },
+    ])
+
+    expect(result.changes).toHaveLength(1)
+    expect(result.changes[0].category).toBe('feature')
+    expect(result.changes[0].visible).toBe(true)
+    expect(result.changes[0].rewritten_title).toContain('search')
   })
 })
