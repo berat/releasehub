@@ -92,46 +92,11 @@ releasehub generate --from v2.3.0 --to v2.4.0 --publish
 
 ## Use in CI (GitHub Actions)
 
-Pick the AI provider that matches your setup:
-
-**Anthropic (Claude)**
 ```yaml
 - name: Generate release notes
   env:
     RELEASEHUB_GITHUB_TOKEN: ${{ secrets.RELEASEHUB_GITHUB_TOKEN }}
     RELEASEHUB_ANTHROPIC_KEY: ${{ secrets.RELEASEHUB_ANTHROPIC_KEY }}
-  run: |
-    npx @releasehub/cli generate \
-      --from ${{ github.event.release.target_commitish }} \
-      --to ${{ github.ref_name }} \
-      --format github-release \
-      --quiet \
-      --output release-notes.md
-```
-
-**OpenAI (GPT-4o)**
-```yaml
-- name: Generate release notes
-  env:
-    RELEASEHUB_GITHUB_TOKEN: ${{ secrets.RELEASEHUB_GITHUB_TOKEN }}
-    RELEASEHUB_OPENAI_KEY: ${{ secrets.RELEASEHUB_OPENAI_KEY }}
-    RELEASEHUB_AI_PROVIDER: openai
-  run: |
-    npx @releasehub/cli generate \
-      --from ${{ github.event.release.target_commitish }} \
-      --to ${{ github.ref_name }} \
-      --format github-release \
-      --quiet \
-      --output release-notes.md
-```
-
-**Google Gemini**
-```yaml
-- name: Generate release notes
-  env:
-    RELEASEHUB_GITHUB_TOKEN: ${{ secrets.RELEASEHUB_GITHUB_TOKEN }}
-    RELEASEHUB_GEMINI_KEY: ${{ secrets.RELEASEHUB_GEMINI_KEY }}
-    RELEASEHUB_AI_PROVIDER: gemini
   run: |
     npx @releasehub/cli generate \
       --from ${{ github.event.release.target_commitish }} \
@@ -149,7 +114,7 @@ Pick the AI provider that matches your setup:
 |---|---|
 | `releasehub auth login` | Connect your GitHub account via OAuth |
 | `releasehub auth logout` | Disconnect and remove saved token |
-| `releasehub ai add-key` | Add an Anthropic, OpenAI, or Gemini key |
+| `releasehub ai add-key` | Add an Anthropic or OpenAI key |
 | `releasehub ai switch` | Switch active AI provider |
 | `releasehub ai status` | Show provider status and validate keys |
 | `releasehub generate` | Generate release notes from merged PRs |
