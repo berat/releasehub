@@ -33,7 +33,7 @@ function getOctokit(): Octokit {
  */
 function extractLinkedIssues(body: string | null): string[] {
   if (!body) return []
-  const matches = body.matchAll(/(?:closes?|fixes?|resolves?)\s+#(\d+)/gi)
+  const matches = body.matchAll(/(?:closes?|fixe?s?|resolves?)\s+#(\d+)/gi)
   return [...matches].map(m => `#${m[1]}`)
 }
 
