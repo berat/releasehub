@@ -24,7 +24,7 @@ vi.mock('../lib/git.js', () => ({
 vi.mock('../lib/config.js', () => ({
   getActiveProvider: vi.fn(() => 'anthropic'),
   getActiveAIKey: vi.fn(() => 'sk-test-key'),
-  AI_PROVIDER_LABELS: { anthropic: 'Anthropic (Claude)', openai: 'OpenAI (GPT-4o)' },
+  AI_PROVIDER_LABELS: { anthropic: 'Anthropic (Claude)', openai: 'OpenAI (GPT-4o)', gemini: 'Google (Gemini 1.5 Flash)' },
 }))
 
 import { fetchPullRequests, publishGitHubRelease } from '../lib/github.js'
