@@ -31,7 +31,7 @@ Requires Node.js 18 or later.
 # 1. Connect your GitHub account
 releasehub auth login
 
-# 2. Add your AI key (Anthropic or OpenAI)
+# 2. Add your AI key (Anthropic, OpenAI, or Gemini)
 releasehub ai add-key
 
 # 3. Generate release notes
@@ -139,6 +139,7 @@ releasehub generate --from v2.3.0 --to v2.4.0 --publish
 |---|---|---|
 | Anthropic | claude-sonnet-4-6 | `releasehub ai add-key` or `RELEASEHUB_ANTHROPIC_KEY` |
 | OpenAI | gpt-4o | `releasehub ai add-key` or `RELEASEHUB_OPENAI_KEY` |
+| Google Gemini | gemini-1.5-flash | `releasehub ai add-key` or `RELEASEHUB_GEMINI_KEY` |
 
 Anthropic is the default. Switch with `releasehub ai switch`.
 
@@ -151,6 +152,8 @@ Anthropic is the default. Switch with `releasehub ai switch`.
 | `RELEASEHUB_GITHUB_TOKEN` | GitHub personal access token (alternative to `auth login`) |
 | `RELEASEHUB_ANTHROPIC_KEY` | Anthropic API key |
 | `RELEASEHUB_OPENAI_KEY` | OpenAI API key |
+| `RELEASEHUB_GEMINI_KEY` | Google Gemini API key |
+| `RELEASEHUB_AI_PROVIDER` | Override active provider: `anthropic`, `openai`, or `gemini` |
 
 ---
 

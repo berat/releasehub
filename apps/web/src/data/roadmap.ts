@@ -26,7 +26,9 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
       { title: 'CLI UX polish', description: 'Onboarding flow with next-step hints, improved --help across all commands, actionable error messages.', tag: 'CLI' },
       { title: 'AI analysis — multi-provider', description: 'Classify and rewrite PRs using Anthropic (Claude) or OpenAI (GPT-4o). 20-PR batching for large releases.', tag: 'CLI' },
       { title: 'GitHub data ingestion', description: 'Fetch merged PRs between two tags, extract labels and linked issues, auto-detect repo from git remote.', tag: 'CLI' },
-      { title: 'CLI auth & key management', description: 'GitHub OAuth device flow. AI provider selection (Anthropic / OpenAI) with releasehub ai add-key, switch, status.', tag: 'CLI' },
+      { title: 'CLI auth & key management', description: 'GitHub OAuth device flow. AI provider selection (Anthropic / OpenAI / Gemini) with releasehub ai add-key, switch, status.', tag: 'CLI' },
+      { title: 'Gemini support — v1.1.0', description: 'Google Gemini (gemini-1.5-flash) added as a third AI provider alongside Anthropic and OpenAI.', tag: 'CLI' },
+      { title: 'Test suite & CI — v1.1.0', description: '51 unit and integration tests with vitest. GitHub Actions CI runs tsc, ESLint, and tests on every PR. Branch protection enforces CI before merge.', tag: 'CLI' },
       { title: 'Roadmap page', description: 'Live board with tag filtering — Shipped / Now / Next / Exploring.', tag: 'Website' },
       { title: 'Changelog page', description: 'Versioned changelog with categories. Preview section on the landing page.', tag: 'Website' },
       { title: 'Docs page', description: 'Full CLI reference with sidebar navigation — commands, flags, GitHub Actions workflow.', tag: 'Website' },
@@ -46,7 +48,6 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = [
     label: 'Next',
     color: 'var(--improve)',
     cards: [
-      { title: 'Gemini support', description: 'Add Google Gemini as a third AI provider option.', tag: 'CLI' },
       { title: 'Issue templates', description: 'GitHub issue templates for bug reports and feature requests.', tag: 'Launch' },
     ],
   },
