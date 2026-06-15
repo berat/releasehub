@@ -100,7 +100,7 @@ export function DocsPage() {
             <ul>
               <li><strong>Node.js 18+</strong></li>
               <li><strong>A GitHub account</strong> with access to the repos you want to analyze</li>
-              <li><strong>An AI provider key</strong> — Anthropic or OpenAI (you choose during setup)</li>
+              <li><strong>An AI provider key</strong> — Anthropic, OpenAI, or Google Gemini (you choose during setup)</li>
             </ul>
 
             <h2 id="installation">Installation</h2>
@@ -122,7 +122,7 @@ export function DocsPage() {
             </Callout>
 
             <h2 id="ai-key">AI key</h2>
-            <p>ReleaseHub supports Anthropic (Claude) and OpenAI (GPT-4o). Run the command and select your provider interactively:</p>
+            <p>ReleaseHub supports Anthropic (Claude), OpenAI (GPT-4o), and Google Gemini (gemini-1.5-flash). Run the command and select your provider interactively:</p>
             <CodeBlock>{'releasehub ai add-key'}</CodeBlock>
             <p>You'll be shown a numbered list — pick your provider, then paste your API key. It's validated immediately and saved to <code className="inline">~/.releasehub/config.json</code> with <code className="inline">chmod 600</code> permissions. It is never sent to ReleaseHub servers.</p>
 
@@ -142,6 +142,14 @@ export function DocsPage() {
               <li>Make sure your account has a <a className="ln" href="https://platform.openai.com/settings/organization/billing" target="_blank" rel="noopener noreferrer">billing method</a> added — GPT-4o requires a funded account.</li>
               <li>Paste it when prompted by <code className="inline">releasehub ai add-key</code>.</li>
             </ol>
+
+            <h3>Getting a Gemini key</h3>
+            <ol>
+              <li>Go to <a className="ln" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/app/apikey</a> and sign in with your Google account.</li>
+              <li>Click <strong>Create API key</strong> and copy it.</li>
+              <li>Paste it when prompted by <code className="inline">releasehub ai add-key</code>.</li>
+            </ol>
+            <Callout>Gemini API is free up to generous rate limits via Google AI Studio. No billing required to get started.</Callout>
 
             <p>To switch providers later:</p>
             <CodeBlock>{'releasehub ai switch'}</CodeBlock>
@@ -233,6 +241,7 @@ _+ 4 more updates_`}</pre>
               <li><code className="inline">RELEASEHUB_GITHUB_TOKEN</code> — run <code className="inline">releasehub auth login</code> locally, then copy the token from <code className="inline">~/.releasehub/config.json</code></li>
               <li><code className="inline">RELEASEHUB_ANTHROPIC_KEY</code> — your Anthropic API key (if using Anthropic)</li>
               <li><code className="inline">RELEASEHUB_OPENAI_KEY</code> — your OpenAI API key (if using OpenAI)</li>
+              <li><code className="inline">RELEASEHUB_GEMINI_KEY</code> — your Gemini API key (if using Gemini)</li>
             </ul>
             <p>Then add this workflow. Pick the AI provider that matches your setup:</p>
             <h3>Using Anthropic (Claude)</h3>
@@ -312,6 +321,45 @@ _+ 4 more updates_`}</pre>
               {'        env:\n'}
               {'          GH_TOKEN: ${{ github.token }}'}
             </CodeBlock>
+            <h3>Using Google Gemini</h3>
+            <CodeBlock>
+              {'# .github/workflows/release.yml\n'}
+              {'name: Release\n\n'}
+              {'on:\n'}
+              {'  push:\n'}
+              {"    tags: ['v*']\n\n"}
+              {'jobs:\n'}
+              {'  release:\n'}
+              {'    runs-on: ubuntu-latest\n'}
+              {'    steps:\n'}
+              {'      - uses: actions/checkout@v4\n'}
+              {'        with:\n'}
+              {'          fetch-depth: 0\n\n'}
+              {'      - name: Get previous tag\n'}
+              {'        id: prev_tag\n'}
+              {'        run: |\n'}
+              {"          PREV=$(git tag --sort=-version:refname | sed -n '2p')\n"}
+              {'          echo "tag=$PREV" >> $GITHUB_OUTPUT\n\n'}
+              {'      - name: Generate release notes\n'}
+              {'        env:\n'}
+              {'          RELEASEHUB_GITHUB_TOKEN: ${{ secrets.RELEASEHUB_GITHUB_TOKEN }}\n'}
+              {'          RELEASEHUB_GEMINI_KEY: ${{ secrets.RELEASEHUB_GEMINI_KEY }}\n'}
+              {'          RELEASEHUB_AI_PROVIDER: gemini\n'}
+              {'        run: |\n'}
+              {'          npx @releasehub/cli generate \\\n'}
+              {'            --from ${{ steps.prev_tag.outputs.tag }} \\\n'}
+              {'            --to ${{ github.ref_name }} \\\n'}
+              {'            --format github-release \\\n'}
+              {'            --output release-notes.md \\\n'}
+              {'            --quiet\n\n'}
+              {'      - name: Create GitHub Release\n'}
+              {'        run: |\n'}
+              {'          gh release create ${{ github.ref_name }} \\\n'}
+              {'            --title "${{ github.ref_name }}" \\\n'}
+              {'            --notes-file release-notes.md\n'}
+              {'        env:\n'}
+              {'          GH_TOKEN: ${{ github.token }}'}
+            </CodeBlock>
             <Callout>
               The workflow triggers on any tag starting with <code className="inline">v</code>. Adjust the <code className="inline">tags</code> filter to match your versioning convention.
             </Callout>
@@ -326,6 +374,8 @@ _+ 4 more updates_`}</pre>
                 <tr><td>RELEASEHUB_GITHUB_TOKEN</td><td>GitHub OAuth token. Overrides the token saved by <code className="inline">releasehub auth login</code>.</td></tr>
                 <tr><td>RELEASEHUB_ANTHROPIC_KEY</td><td>Anthropic API key. Used when active provider is <code className="inline">anthropic</code>.</td></tr>
                 <tr><td>RELEASEHUB_OPENAI_KEY</td><td>OpenAI API key. Used when active provider is <code className="inline">openai</code>.</td></tr>
+                <tr><td>RELEASEHUB_GEMINI_KEY</td><td>Google Gemini API key. Used when active provider is <code className="inline">gemini</code>.</td></tr>
+                <tr><td>RELEASEHUB_AI_PROVIDER</td><td>Override the active provider: <code className="inline">anthropic</code>, <code className="inline">openai</code>, or <code className="inline">gemini</code>.</td></tr>
               </tbody>
             </table>
 
@@ -337,7 +387,8 @@ _+ 4 more updates_`}</pre>
   "github_token": "ghp_...",
   "ai_provider": "anthropic",
   "anthropic_key": "sk-ant-...",
-  "openai_key": "sk-..."
+  "openai_key": "sk-...",
+  "gemini_key": "AIza..."
 }`}</pre>
             </div>
             <p>The file is set to <code className="inline">chmod 600</code> — readable only by your user. Environment variables always take precedence over this file.</p>
@@ -359,7 +410,7 @@ _+ 4 more updates_`}</pre>
                 <tr><th>Command</th><th>Description</th></tr>
               </thead>
               <tbody>
-                <tr><td>releasehub ai add-key</td><td>Select a provider (Anthropic or OpenAI) and save your API key.</td></tr>
+                <tr><td>releasehub ai add-key</td><td>Select a provider (Anthropic, OpenAI, or Gemini) and save your API key.</td></tr>
                 <tr><td>releasehub ai switch</td><td>Switch the active AI provider. Offers to add a key if one is missing.</td></tr>
                 <tr><td>releasehub ai remove-key</td><td>Remove a saved key. Prompts which provider to remove.</td></tr>
                 <tr><td>releasehub ai status</td><td>Show all providers, validate each saved key.</td></tr>

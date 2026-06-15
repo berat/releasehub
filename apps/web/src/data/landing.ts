@@ -114,7 +114,7 @@ export const AI_DEMO_ROWS = [
 export const OPEN_SOURCE_CORE_FEATURES = [
   'npm install -g @releasehub/cli',
   'GitHub OAuth — one-time setup',
-  'AI analysis with your own Anthropic key',
+  'AI analysis — Anthropic, OpenAI, or Gemini',
   'GitHub release, changelog & Slack output',
   'CI/CD ready — works in GitHub Actions',
 ]

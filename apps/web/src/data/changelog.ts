@@ -10,6 +10,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.1.0',
+    date: 'June 15, 2026',
+    summary: 'Google Gemini support, full test suite, CI pipeline, and branch protection.',
+    changes: [
+      {
+        category: 'feature',
+        items: [
+          'Google Gemini (gemini-1.5-flash) added as a third AI provider — set key via releasehub ai add-key or RELEASEHUB_GEMINI_KEY',
+        ],
+      },
+      {
+        category: 'improvement',
+        items: [
+          'Full unit and integration test suite (51 tests across formatters, AI, GitHub, and the generate pipeline)',
+          'GitHub Actions CI — tsc, ESLint, and vitest run on every PR',
+          'ESLint with typescript-eslint added to catch style issues before they merge',
+          'PR template enforces summary and test plan on every pull request',
+          'Branch protection — CI must pass before any PR can merge to main',
+        ],
+      },
+    ],
+  },
+  {
     version: 'v1.0.0',
     date: 'June 10, 2026',
     summary: 'First public release of @releasehub/cli.',
