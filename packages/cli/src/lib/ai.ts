@@ -99,15 +99,22 @@ async function analyzeWithAnthropic(prs: PullRequest[]): Promise<AnalyzedChange[
 
   for (let i = 0; i < prs.length; i += BATCH_SIZE) {
     const batch = prs.slice(i, i + BATCH_SIZE)
-    const message = await client.messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(batch) }],
-    })
-    const content = message.content[0]
-    if (!content || content.type !== 'text') throw new ApiError('Unexpected response from Anthropic API')
-    results.push(...parseResponse(content.text))
+    try {
+      const message = await client.messages.create({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 4096,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: buildUserPrompt(batch) }],
+      })
+      const content = message.content[0]
+      if (!content || content.type !== 'text') throw new ApiError('Unexpected response from Anthropic API')
+      results.push(...parseResponse(content.text))
+    } catch (err) {
+      if (err instanceof Anthropic.AuthenticationError) {
+        throw new AuthError('Anthropic API key is invalid or expired. Run: releasehub ai add-key')
+      }
+      throw err
+    }
   }
 
   return results
@@ -122,16 +129,23 @@ async function analyzeWithOpenAI(prs: PullRequest[]): Promise<AnalyzedChange[]> 
 
   for (let i = 0; i < prs.length; i += BATCH_SIZE) {
     const batch = prs.slice(i, i + BATCH_SIZE)
-    const completion = await client.chat.completions.create({
-      model: OPENAI_MODEL,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: buildUserPrompt(batch) },
-      ],
-    })
-    const content = completion.choices[0]?.message?.content
-    if (!content) throw new ApiError('Unexpected response from OpenAI API')
-    results.push(...parseResponse(content))
+    try {
+      const completion = await client.chat.completions.create({
+        model: OPENAI_MODEL,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: buildUserPrompt(batch) },
+        ],
+      })
+      const content = completion.choices[0]?.message?.content
+      if (!content) throw new ApiError('Unexpected response from OpenAI API')
+      results.push(...parseResponse(content))
+    } catch (err) {
+      if (err instanceof OpenAI.AuthenticationError) {
+        throw new AuthError('OpenAI API key is invalid or expired. Run: releasehub ai add-key')
+      }
+      throw err
+    }
   }
 
   return results
@@ -150,10 +164,17 @@ async function analyzeWithGemini(prs: PullRequest[]): Promise<AnalyzedChange[]> 
 
   for (let i = 0; i < prs.length; i += BATCH_SIZE) {
     const batch = prs.slice(i, i + BATCH_SIZE)
-    const result = await model.generateContent(buildUserPrompt(batch))
-    const content = result.response.text()
-    if (!content) throw new ApiError('Unexpected response from Gemini API')
-    results.push(...parseResponse(content))
+    try {
+      const result = await model.generateContent(buildUserPrompt(batch))
+      const content = result.response.text()
+      if (!content) throw new ApiError('Unexpected response from Gemini API')
+      results.push(...parseResponse(content))
+    } catch (err) {
+      if (err instanceof Error && /api.key.not.valid|api_key_invalid|401|403/i.test(err.message)) {
+        throw new AuthError('Gemini API key is invalid or expired. Run: releasehub ai add-key')
+      }
+      throw err
+    }
   }
 
   return results

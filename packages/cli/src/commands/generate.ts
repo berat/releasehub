@@ -8,6 +8,7 @@ import { analyzePullRequests } from '../lib/ai.js'
 import { getActiveAIKey, getActiveProvider, AI_PROVIDER_LABELS } from '../lib/config.js'
 import { handleError, AuthError } from '../lib/errors.js'
 import { formatOutput } from '../lib/formatters.js'
+import { estimateCost, formatCostEstimate } from '../lib/cost.js'
 
 export interface GenerateOptions {
   from: string
@@ -18,6 +19,7 @@ export interface GenerateOptions {
   publish?: boolean
   quiet?: boolean
   dryRun?: boolean
+  showCost?: boolean
 }
 
 export function registerGenerateCommand(program: Command): void {
@@ -45,6 +47,7 @@ ${chalk.bold('Examples:')}
     .option('--publish', 'Publish directly as a GitHub Release via the API')
     .option('--quiet', 'Suppress progress output — prints only the final result (useful in CI)')
     .option('--dry-run', 'Fetch PRs and show what would be analyzed — no AI call, no output written')
+    .option('--show-cost', 'Show estimated token usage and cost before generating')
     .action(async (options: GenerateOptions) => {
       try {
         const log = (msg: string) => { if (!options.quiet) process.stderr.write(msg + '\n') }
@@ -76,9 +79,9 @@ ${chalk.bold('Examples:')}
           process.exit(0)
         }
 
-        prSpinner.succeed(`Fetched ${chalk.bold(prs.length)} pull requests`)
+        prSpinner.succeed(`Found ${chalk.bold(prs.length)} pull requests between ${chalk.cyan(options.from)} and ${chalk.cyan(options.to)}`)
 
-        // 4. Dry run — show PR list, skip AI
+        // 4. Dry run — show PR list and cost estimate, skip AI
         if (options.dryRun) {
           log('')
           log(chalk.bold('  Dry run — no AI call will be made'))
@@ -89,13 +92,20 @@ ${chalk.bold('Examples:')}
             log(`  ${chalk.dim(`${i + 1}.`)} ${pr.title}${labelStr}`)
           })
           log('')
-          log(chalk.dim(`  ${prs.length} PRs would be sent to ${AI_PROVIDER_LABELS[getActiveProvider()]} for analysis.`))
+          const estimate = estimateCost(prs.length, getActiveProvider())
+          log(chalk.dim(`  ${prs.length} PRs → ${formatCostEstimate(estimate)}`))
           log(chalk.dim('  Remove --dry-run to generate release notes.'))
           log('')
           process.exit(0)
         }
 
-        // 5. AI analysis
+        // 5. Show cost estimate before AI call (--show-cost flag)
+        if (options.showCost) {
+          const estimate = estimateCost(prs.length, getActiveProvider())
+          log(chalk.dim(`  cost est. : ${formatCostEstimate(estimate)}`))
+          log('')
+        }
+
         const aiSpinner = ora({ text: 'Analyzing with AI...', isSilent: options.quiet }).start()
         const { changes } = await analyzePullRequests(prs)
         const visible = changes.filter(c => c.visible)
@@ -111,10 +121,10 @@ ${chalk.bold('Examples:')}
           process.exit(0)
         }
 
-        // 6. Format output
+        // 7. Format output
         const output = formatOutput(options.format, { version: options.to, changes })
 
-        // 7. Write or print
+        // 8. Write or print
         if (options.output) {
           writeFileSync(options.output, output, 'utf8')
           log('')
@@ -125,7 +135,7 @@ ${chalk.bold('Examples:')}
           process.stdout.write(output)
         }
 
-        // 8. Publish as GitHub Release
+        // 9. Publish as GitHub Release
         if (options.publish) {
           const publishSpinner = ora({ text: 'Publishing GitHub Release...', isSilent: options.quiet }).start()
 

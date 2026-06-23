@@ -110,6 +110,33 @@ describe('parseResponse', () => {
   })
 })
 
+// ─── Invalid key error detection (Gemini regex pattern) ───────────────────────
+
+describe('Gemini invalid key detection', () => {
+  const invalidKeyPattern = /api.key.not.valid|api_key_invalid|401|403/i
+
+  it('matches "API key not valid" message', () => {
+    expect(invalidKeyPattern.test('API key not valid. Please pass a valid API key.')).toBe(true)
+  })
+
+  it('matches api_key_invalid message', () => {
+    expect(invalidKeyPattern.test('api_key_invalid')).toBe(true)
+  })
+
+  it('matches 401 status in message', () => {
+    expect(invalidKeyPattern.test('Request failed with status 401')).toBe(true)
+  })
+
+  it('matches 403 status in message', () => {
+    expect(invalidKeyPattern.test('403 Forbidden')).toBe(true)
+  })
+
+  it('does not match unrelated errors', () => {
+    expect(invalidKeyPattern.test('Network timeout')).toBe(false)
+    expect(invalidKeyPattern.test('Unexpected response format')).toBe(false)
+  })
+})
+
 // ─── Gemini provider mock ──────────────────────────────────────────────────────
 
 vi.mock('@google/generative-ai', () => ({
