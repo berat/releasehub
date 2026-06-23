@@ -165,6 +165,8 @@ Pick the AI provider that matches your setup:
 | `--output <file>` | stdout | Write output to a file |
 | `--publish` | — | Publish as a GitHub Release |
 | `--quiet` | — | Suppress progress output (CI mode) |
+| `--dry-run` | — | Show PR list and token estimate, skip AI call |
+| `--show-cost` | — | Show estimated token usage and cost before generating |
 
 ---
 
