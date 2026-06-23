@@ -99,7 +99,7 @@ describe('generate pipeline — integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(fetchPullRequests).mockResolvedValue(mockPRs)
-    vi.mocked(analyzePullRequests).mockResolvedValue({ changes: mockChanges })
+    vi.mocked(analyzePullRequests).mockResolvedValue({ changes: mockChanges, prefilteredCount: 0 })
   })
 
   it('fetches PRs with correct repo and range', async () => {
@@ -189,7 +189,7 @@ describe('generate pipeline — integration', () => {
 
   it('handles all-internal changes gracefully', async () => {
     const allInternal: AnalyzedChange[] = mockChanges.map(c => ({ ...c, visible: false, category: 'internal' }))
-    vi.mocked(analyzePullRequests).mockResolvedValue({ changes: allInternal })
+    vi.mocked(analyzePullRequests).mockResolvedValue({ changes: allInternal, prefilteredCount: 0 })
 
     const prs = await vi.mocked(fetchPullRequests)({ owner: 'testuser', name: 'testrepo' }, 'v1.0.0', 'v1.1.0')
     const { changes } = await vi.mocked(analyzePullRequests)(prs)
