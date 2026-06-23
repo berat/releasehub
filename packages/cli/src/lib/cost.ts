@@ -1,4 +1,6 @@
 import type { AIProvider } from './config.js'
+import type { PullRequest } from './github.js'
+import { prefilterPRs } from './prefilter.js'
 
 // Approximate token counts based on real prompt structure
 const SYSTEM_PROMPT_TOKENS = 350
@@ -18,6 +20,11 @@ export interface CostEstimate {
   totalTokens: number
   costUsd: number
   model: string
+}
+
+export function estimateCostForPRs(prs: PullRequest[], provider: AIProvider): CostEstimate {
+  const { toAnalyze } = prefilterPRs(prs)
+  return estimateCost(toAnalyze.length, provider)
 }
 
 export function estimateCost(prCount: number, provider: AIProvider): CostEstimate {

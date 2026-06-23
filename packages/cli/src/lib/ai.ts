@@ -3,6 +3,7 @@ import OpenAI from 'openai'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getActiveProvider, getActiveAIKey } from './config.js'
 import { AuthError, ApiError } from './errors.js'
+import { prefilterPRs } from './prefilter.js'
 import type { PullRequest } from './github.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -182,21 +183,26 @@ async function analyzeWithGemini(prs: PullRequest[]): Promise<AnalyzedChange[]> 
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export async function analyzePullRequests(prs: PullRequest[]): Promise<AnalysisResult> {
+export async function analyzePullRequests(prs: PullRequest[]): Promise<AnalysisResult & { prefilteredCount: number }> {
+  const { toAnalyze, prefiltered } = prefilterPRs(prs)
   const provider = getActiveProvider()
-  let changes: AnalyzedChange[]
+  let aiChanges: AnalyzedChange[] = []
 
-  switch (provider) {
-    case 'anthropic': changes = await analyzeWithAnthropic(prs); break
-    case 'openai':    changes = await analyzeWithOpenAI(prs); break
-    case 'gemini':    changes = await analyzeWithGemini(prs); break
-    default: throw new ApiError(`Unsupported AI provider: ${provider}`)
+  if (toAnalyze.length > 0) {
+    switch (provider) {
+      case 'anthropic': aiChanges = await analyzeWithAnthropic(toAnalyze); break
+      case 'openai':    aiChanges = await analyzeWithOpenAI(toAnalyze); break
+      case 'gemini':    aiChanges = await analyzeWithGemini(toAnalyze); break
+      default: throw new ApiError(`Unsupported AI provider: ${provider}`)
+    }
   }
+
+  const changes = [...aiChanges, ...prefiltered]
 
   const order: Record<ChangeCategory, number> = {
     breaking: 0, feature: 1, improvement: 2, bugfix: 3, internal: 4,
   }
   changes.sort((a, b) => (order[a.category] ?? 5) - (order[b.category] ?? 5))
 
-  return { changes }
+  return { changes, prefilteredCount: prefiltered.length }
 }

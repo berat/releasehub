@@ -8,7 +8,7 @@ import { analyzePullRequests } from '../lib/ai.js'
 import { getActiveAIKey, getActiveProvider, AI_PROVIDER_LABELS } from '../lib/config.js'
 import { handleError, AuthError } from '../lib/errors.js'
 import { formatOutput } from '../lib/formatters.js'
-import { estimateCost, formatCostEstimate } from '../lib/cost.js'
+import { estimateCostForPRs, formatCostEstimate } from '../lib/cost.js'
 
 export interface GenerateOptions {
   from: string
@@ -92,7 +92,7 @@ ${chalk.bold('Examples:')}
             log(`  ${chalk.dim(`${i + 1}.`)} ${pr.title}${labelStr}`)
           })
           log('')
-          const estimate = estimateCost(prs.length, getActiveProvider())
+          const estimate = estimateCostForPRs(prs, getActiveProvider())
           log(chalk.dim(`  ${prs.length} PRs → ${formatCostEstimate(estimate)}`))
           log(chalk.dim('  Remove --dry-run to generate release notes.'))
           log('')
@@ -101,16 +101,17 @@ ${chalk.bold('Examples:')}
 
         // 5. Show cost estimate before AI call (--show-cost flag)
         if (options.showCost) {
-          const estimate = estimateCost(prs.length, getActiveProvider())
+          const estimate = estimateCostForPRs(prs, getActiveProvider())
           log(chalk.dim(`  cost est. : ${formatCostEstimate(estimate)}`))
           log('')
         }
 
         const aiSpinner = ora({ text: 'Analyzing with AI...', isSilent: options.quiet }).start()
-        const { changes } = await analyzePullRequests(prs)
+        const { changes, prefilteredCount } = await analyzePullRequests(prs)
         const visible = changes.filter(c => c.visible)
         const hidden = changes.filter(c => !c.visible)
-        aiSpinner.succeed(`Analyzed — ${chalk.bold(visible.length)} user-facing, ${chalk.dim(`${hidden.length} hidden`)}`)
+        const prefilteredNote = prefilteredCount > 0 ? chalk.dim(`, ${prefilteredCount} pre-filtered`) : ''
+        aiSpinner.succeed(`Analyzed — ${chalk.bold(visible.length)} user-facing, ${chalk.dim(`${hidden.length} hidden`)}${prefilteredNote}`)
 
         if (visible.length === 0) {
           log('')
