@@ -76,7 +76,7 @@ ${chalk.bold('Examples:')}
           process.exit(0)
         }
 
-        prSpinner.succeed(`Fetched ${chalk.bold(prs.length)} pull requests`)
+        prSpinner.succeed(`Found ${chalk.bold(prs.length)} pull requests between ${chalk.cyan(options.from)} and ${chalk.cyan(options.to)}`)
 
         // 4. Dry run — show PR list, skip AI
         if (options.dryRun) {
