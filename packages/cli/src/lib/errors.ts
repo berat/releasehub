@@ -32,7 +32,6 @@ export class ApiError extends ReleaseHubError {
 }
 
 const HINTS: Record<string, string> = {
-  AuthError:   'Run: releasehub auth login',
   ConfigError: 'Run: releasehub --help for usage',
 }
 
