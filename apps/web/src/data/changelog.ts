@@ -10,6 +10,34 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.1.1',
+    date: 'June 25, 2026',
+    summary: 'Dry-run mode, config command, and GitHub Actions workflow improvements.',
+    changes: [
+      {
+        category: 'feature',
+        items: [
+          '--dry-run flag for generate — fetches PRs and shows what would be analyzed without making an AI call',
+          'releasehub config command — view current configuration (GitHub token, AI provider, masked API keys)',
+          'releasehub config --reset — delete the config file and start fresh',
+        ],
+      },
+      {
+        category: 'improvement',
+        items: [
+          'GitHub Actions workflow now handles first-tag edge case — skips release notes generation when no previous tag exists',
+          'RELEASEHUB_AI_PROVIDER env var support — switch providers in CI without touching the config file',
+        ],
+      },
+      {
+        category: 'bugfix',
+        items: [
+          'Fixed fetch is not defined error on Node 16 — Octokit now uses native fetch only when available',
+        ],
+      },
+    ],
+  },
+  {
     version: 'v1.1.0',
     date: 'June 15, 2026',
     summary: 'Google Gemini support, full test suite, CI pipeline, and branch protection.',
