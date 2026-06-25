@@ -254,6 +254,8 @@ _+ 4 more updates_`}</pre>
               {'jobs:\n'}
               {'  release:\n'}
               {'    runs-on: ubuntu-latest\n'}
+              {'    permissions:\n'}
+              {'      contents: write\n\n'}
               {'    steps:\n'}
               {'      - uses: actions/checkout@v4\n'}
               {'        with:\n'}
@@ -261,26 +263,26 @@ _+ 4 more updates_`}</pre>
               {'      - name: Get previous tag\n'}
               {'        id: prev_tag\n'}
               {'        run: |\n'}
-              {"          PREV=$(git tag --sort=-version:refname | sed -n '2p')\n"}
-              {'          echo "tag=$PREV" >> $GITHUB_OUTPUT\n\n'}
-              {'      - name: Generate release notes\n'}
+              {"          PREV=$(git tag --sort=-version:refname | grep -E '^v[0-9]' | sed -n '2p')\n"}
+              {'          if [ -z "$PREV" ]; then\n'}
+              {'            echo "skip=true" >> $GITHUB_OUTPUT\n'}
+              {'          else\n'}
+              {'            echo "tag=$PREV" >> $GITHUB_OUTPUT\n'}
+              {'            echo "skip=false" >> $GITHUB_OUTPUT\n'}
+              {'          fi\n\n'}
+              {'      - name: Generate and publish release notes\n'}
+              {'        if: steps.prev_tag.outputs.skip != \'true\'\n'}
               {'        env:\n'}
-              {'          RELEASEHUB_GITHUB_TOKEN: ${{ secrets.RELEASEHUB_GITHUB_TOKEN }}\n'}
-              {'          RELEASEHUB_ANTHROPIC_KEY: ${{ secrets.RELEASEHUB_ANTHROPIC_KEY }}\n'}
+              {'          RELEASEHUB_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n'}
+              {'          RELEASEHUB_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_KEY }}\n'}
+              {'          RELEASEHUB_AI_PROVIDER: anthropic\n'}
               {'        run: |\n'}
               {'          npx @releasehub/cli generate \\\n'}
               {'            --from ${{ steps.prev_tag.outputs.tag }} \\\n'}
               {'            --to ${{ github.ref_name }} \\\n'}
               {'            --format github-release \\\n'}
-              {'            --output release-notes.md \\\n'}
-              {'            --quiet\n\n'}
-              {'      - name: Create GitHub Release\n'}
-              {'        run: |\n'}
-              {'          gh release create ${{ github.ref_name }} \\\n'}
-              {'            --title "${{ github.ref_name }}" \\\n'}
-              {'            --notes-file release-notes.md\n'}
-              {'        env:\n'}
-              {'          GH_TOKEN: ${{ github.token }}'}
+              {'            --publish \\\n'}
+              {'            --quiet\n'}
             </CodeBlock>
             <h3>Using OpenAI (GPT-4o)</h3>
             <CodeBlock>
@@ -292,6 +294,8 @@ _+ 4 more updates_`}</pre>
               {'jobs:\n'}
               {'  release:\n'}
               {'    runs-on: ubuntu-latest\n'}
+              {'    permissions:\n'}
+              {'      contents: write\n\n'}
               {'    steps:\n'}
               {'      - uses: actions/checkout@v4\n'}
               {'        with:\n'}
@@ -299,27 +303,26 @@ _+ 4 more updates_`}</pre>
               {'      - name: Get previous tag\n'}
               {'        id: prev_tag\n'}
               {'        run: |\n'}
-              {"          PREV=$(git tag --sort=-version:refname | sed -n '2p')\n"}
-              {'          echo "tag=$PREV" >> $GITHUB_OUTPUT\n\n'}
-              {'      - name: Generate release notes\n'}
+              {"          PREV=$(git tag --sort=-version:refname | grep -E '^v[0-9]' | sed -n '2p')\n"}
+              {'          if [ -z "$PREV" ]; then\n'}
+              {'            echo "skip=true" >> $GITHUB_OUTPUT\n'}
+              {'          else\n'}
+              {'            echo "tag=$PREV" >> $GITHUB_OUTPUT\n'}
+              {'            echo "skip=false" >> $GITHUB_OUTPUT\n'}
+              {'          fi\n\n'}
+              {'      - name: Generate and publish release notes\n'}
+              {'        if: steps.prev_tag.outputs.skip != \'true\'\n'}
               {'        env:\n'}
-              {'          RELEASEHUB_GITHUB_TOKEN: ${{ secrets.RELEASEHUB_GITHUB_TOKEN }}\n'}
-              {'          RELEASEHUB_OPENAI_KEY: ${{ secrets.RELEASEHUB_OPENAI_KEY }}\n'}
+              {'          RELEASEHUB_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n'}
+              {'          RELEASEHUB_OPENAI_KEY: ${{ secrets.OPENAI_KEY }}\n'}
               {'          RELEASEHUB_AI_PROVIDER: openai\n'}
               {'        run: |\n'}
               {'          npx @releasehub/cli generate \\\n'}
               {'            --from ${{ steps.prev_tag.outputs.tag }} \\\n'}
               {'            --to ${{ github.ref_name }} \\\n'}
               {'            --format github-release \\\n'}
-              {'            --output release-notes.md \\\n'}
-              {'            --quiet\n\n'}
-              {'      - name: Create GitHub Release\n'}
-              {'        run: |\n'}
-              {'          gh release create ${{ github.ref_name }} \\\n'}
-              {'            --title "${{ github.ref_name }}" \\\n'}
-              {'            --notes-file release-notes.md\n'}
-              {'        env:\n'}
-              {'          GH_TOKEN: ${{ github.token }}'}
+              {'            --publish \\\n'}
+              {'            --quiet\n'}
             </CodeBlock>
             <h3>Using Google Gemini</h3>
             <CodeBlock>
